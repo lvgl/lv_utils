@@ -1,0 +1,4 @@
+font->fnt: http://www.angelcode.com/products/bmfont/
+in Export options: XML output, png texture
+
+fnt->c: http://larsee.dk/converting-fonts-to-c-source-using-bmfont2c/

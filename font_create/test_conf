@@ -1,0 +1,9 @@
+[Font1]
+CFontName = dejavu_20
+FirstAscii = 32
+LastAscii = 255
+BytesWidth = 2
+BytesHeight = 20
+CropX = 0
+CropY = 0
+FixedWidth = 0  
