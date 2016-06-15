@@ -7,25 +7,32 @@ import ntpath
 import os
 import time
 
+transp = "1"
+cd = "16"
+
 if len(sys.argv) < 2:
-  print "No inputfile. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (1/8/16/24)]"
+  print "No inputfile. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (8/16/24), transp (0/1)]"
   exit()
 else: 
   fn = sys.argv[1]
-  if len(sys.argv) == 2:
-    cd = "16"
-  elif len(sys.argv) == 3:
+  if len(sys.argv) >= 3:
     cd = sys.argv[2]
   else:
-    print "Too much argument. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (1/8/16/24)]"
+    print "Auto color depth: 16"
+  if len(sys.argv) >= 4:
+    transp = sys.argv[3]
+  else:
+    print "Auto flags: transp=1"
+
+  if len(sys.argv) >= 5:
+    print "Too much argument. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (8/16/24), transp (0/1)]"
     exit()
     
+flags = transp
 
 if os.path.exists(sys.argv[1]) == False:
   print "---ERROR: File not exists: ", fn
   exit()
-
-print "Setting: ", fn, "export with ", cd, "colors"
 
 #Open image
 try:
@@ -69,20 +76,19 @@ f_txt.write(" [] = { /*Width = " + str(w) + ", Height = " + str(h) + "*/ \r\n")
 if cd == "8":
   dsc =  str(w & 0xFF) + ", " + str(w >> 8) + ",\t/*Width in Little Endian*/\r\n" 
   dsc += str(h & 0xFF) + ", " + str(h >> 8) + ",\t/*Heigth in Little Endian*/\r\n" 
-  dsc += "0, 0,\t/*Reserved*/\r\n" 
+  dsc += str(flags) + " ,0" + ",\t/*Flags*/\r\n" 
 
   dsc += "0, 0,\t/*Reserved*/\r\n"
 elif cd == "16":
-  dsc = str(w) +  ",\t/*Width*/\r\n" + str(h) + ",\t/*Heigth*/\r\n0,\t/*Reserved*/\r\n0,\t/*Reserved*/\r\n"
+  dsc = str(w) +  ",\t/*Width*/\r\n" + str(h) + ",\t/*Heigth*/\r\n" + str(flags) + ",\t/*Flags*/\r\n0,\t/*Reserved*/\r\n"
 elif cd == "24":
   dsc = str(w + (h << 16)) +  ",\t/*Height[31..16], Width[15..0] in Little Endian*/\r\n"
-  dsc += "0,\t/*Reserved*/\r\n" 
+  dsc += str(int(flags)<<16) + "\t/*Flags and reserved*/\r\n" 
 else:
   print "Invalid color depth"
   exit()
 
 f_txt.write(dsc)
-
 
 print "Converting... "
 
@@ -90,7 +96,6 @@ num = 0
 px_out = 0
 col = 0
 line = 0
-print cd
 for px in data:
   try:
     if cd == "8":
