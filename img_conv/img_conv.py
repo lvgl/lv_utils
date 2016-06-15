@@ -66,8 +66,8 @@ f_bin = open(fn_bin, 'w')
 #Write bin the header
 f_bin.write(pack('<H', w))
 f_bin.write(pack('<H', h))
-f_bin.write(pack('<H', 0))
-f_bin.write(pack('<H', 0))
+f_bin.write(pack('<H', int(cd)))
+f_bin.write(pack('<H', int(flags)))
 
 
 #Write the c header
@@ -76,14 +76,14 @@ f_txt.write(" [] = { /*Width = " + str(w) + ", Height = " + str(h) + "*/ \r\n")
 if cd == "8":
   dsc =  str(w & 0xFF) + ", " + str(w >> 8) + ",\t/*Width in Little Endian*/\r\n" 
   dsc += str(h & 0xFF) + ", " + str(h >> 8) + ",\t/*Heigth in Little Endian*/\r\n" 
-  dsc += str(flags) + " ,0" + ",\t/*Flags*/\r\n" 
-
-  dsc += "0, 0,\t/*Reserved*/\r\n"
+  dsc += cd + ", 0, \t/*Color depth = " + cd+"*/\r\n"  
+  dsc += str(flags) + " ,0" + ",\t/*Flags: Transp = " + transp + "*/\r\n" 
 elif cd == "16":
-  dsc = str(w) +  ",\t/*Width*/\r\n" + str(h) + ",\t/*Heigth*/\r\n" + str(flags) + ",\t/*Flags*/\r\n0,\t/*Reserved*/\r\n"
+  dsc = str(w) +  ",\t/*Width*/\r\n" + str(h) + ",\t/*Heigth*/\r\n"
+  dsc += cd + ",\t/*Color depth = " + cd + "*/\r\n" + str(flags) + ",\t/*Flags: Transp = " + transp + "*/\r\n"
 elif cd == "24":
   dsc = str(w + (h << 16)) +  ",\t/*Height[31..16], Width[15..0] in Little Endian*/\r\n"
-  dsc += str(int(flags)<<16) + "\t/*Flags and reserved*/\r\n" 
+  dsc += str((int(cd)<<24) + (int(flags)<<8)) + "\t/*Color depth = " + cd + ", Flags: Transp = " + transp + "*/\r\n" 
 else:
   print "Invalid color depth"
   exit()
