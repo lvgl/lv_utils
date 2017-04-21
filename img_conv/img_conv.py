@@ -7,28 +7,31 @@ import ntpath
 import os
 import time
 
-transp = "1"
 cd = "16"
+transp = "0"
 
 if len(sys.argv) < 2:
-  print "No inputfile. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (8/16/24), transp (0/1)]"
+  print "No inputfile. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (8/16/24)]"
   exit()
 else: 
   fn = sys.argv[1]
   if len(sys.argv) >= 3:
     cd = sys.argv[2]
   else:
-    print "Auto color depth: 16"
+    print "Auto Color depth: 16"
+
   if len(sys.argv) >= 4:
-    transp = sys.argv[3]
+    if(sys.argv[3] == "0"):
+ 	   transp = "0"
+    else:  
+      transp = "1"
   else:
-    print "Auto flags: transp=1"
+    print "Auto Transp: 0"
+ 
 
   if len(sys.argv) >= 5:
-    print "Too much argument. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (8/16/24), transp (0/1)]"
+    print "Too much argument. Usage: ", sys.argv[0], " filename [OPTIONAL color depth (8/16/24)]"
     exit()
-    
-flags = transp
 
 if os.path.exists(sys.argv[1]) == False:
   print "---ERROR: File not exists: ", fn
@@ -39,7 +42,7 @@ try:
   img = image.open(sys.argv[1])
 except IOError as ioe:
   print "---ERROR:", ioe 
-  print "---ERROR: Try to convert the image to jpg format"
+  print "---ERROR: Try to convert the image to jpg or png format"
   exit()
   
 
@@ -56,38 +59,45 @@ f_txt = open(fn_txt, 'w')
 #Write txt the header
 inc =  '#include "img_conf.h" \r\n'
 inc += "#if USE_IMG_"+ fn_base.upper() + " != 0 \r\n\r\n"
-inc += "#include <stdint.h> \r\n#include \"misc/others/color.h\"\r\n\r\n"
+inc += "#include <stdint.h> \r\n#include \"misc/gfx/color.h\"\r\n\r\n"
+inc += "#if COLOR_DEPTH != " + cd + "\r\n#error \"img_" + fn_base + ": Color depth mismatch\"\r\n#else\r\n\r\n"
 f_txt.write(inc)
 
 #Create the output bin file
 fn_bin = "img_" + fn_base + ".bin"
 f_bin = open(fn_bin, 'w')
 
-#Write bin the header
-f_bin.write(pack('<H', w))
-f_bin.write(pack('<H', h))
-f_bin.write(pack('<H', int(cd)))
-f_bin.write(pack('<H', int(flags)))
+cd_bin = 0;
+if(cd == "8"): 
+  cd_bin = 1;
+if(cd == "16"): 
+  cd_bin = 2;
+if(cd == "24"): 
+  cd_bin = 3;
 
+transp_bin = 0;
+if(transp == "1"):
+  transp_bin = 1;
+
+header = (w & 0xFFF) | ((h & 0xFFF) << 12) | ((transp_bin & 0x1) << 24) | ((cd_bin & 0x3) << 25);
+
+#Write bin header
+f_bin.write(pack('<I', header))
 
 #Write the c header
-f_txt.write("const color_int_t img_" + fn_base)
-f_txt.write(" [] = { /*Width = " + str(w) + ", Height = " + str(h) + "*/ \r\n")
+f_txt.write("const color_int_t img_" + fn_base + "[] = {\r\n")
+dsc = "/*HEADER\r\n   Width = " + str(w) + "\r\n   Height = " + str(h) + "\r\n   Transp: " + transp + "\r\n   Color depth: " + cd + "*/\r\n"
 if cd == "8":
-  dsc =  str(w & 0xFF) + ", " + str(w >> 8) + ",\t/*Width in Little Endian*/\r\n" 
-  dsc += str(h & 0xFF) + ", " + str(h >> 8) + ",\t/*Heigth in Little Endian*/\r\n" 
-  dsc += cd + ", 0, \t/*Color depth = " + cd+"*/\r\n"  
-  dsc += str(flags) + " ,0" + ",\t/*Flags: Transp = " + transp + "*/\r\n" 
+  dsc +=  str(header & 0xFF) + ", " + str((header >> 8) & 0xFF) + ", " + str((header >> 16) & 0xFF) + ", " + str((header >> 24) & 0xFF) + ","  
 elif cd == "16":
-  dsc = str(w) +  ",\t/*Width*/\r\n" + str(h) + ",\t/*Heigth*/\r\n"
-  dsc += cd + ",\t/*Color depth = " + cd + "*/\r\n" + str(flags) + ",\t/*Flags: Transp = " + transp + "*/\r\n"
+  dsc += str(header & 0xFFFF) + ", " + str((header >> 16) & 0xFFFF) + ","
 elif cd == "24":
-  dsc = str(w + (h << 16)) +  ",\t/*Height[31..16], Width[15..0] in Little Endian*/\r\n"
-  dsc += str((int(cd)<<24) + (int(flags)<<8)) + "\t/*Color depth = " + cd + ", Flags: Transp = " + transp + "*/\r\n" 
+  dsc += str(header) + ","
 else:
   print "Invalid color depth"
   exit()
 
+dsc += "\r\n\r\n/*IMAGE DATA*/ \r\n\r\n"
 f_txt.write(dsc)
 
 print "Converting... "
@@ -137,8 +147,9 @@ for px in data:
 print ""		#New line after % count
 
 f_txt.write("};\r\n\r\n")
+f_txt.write("#endif\t/*Color depth check*/\r\n")
 
-f_txt.write("#endif\r\n")
+f_txt.write("#endif\t/*Image enable*/\r\n")
 
 #Close files
 f_txt.close()
