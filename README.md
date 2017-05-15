@@ -14,7 +14,7 @@ Website: http://www.gl.littlev.hu
 ## Usage
 Both of the utilities are using Python scripts. So you has to install Python on your operation system.
 
-**Clone or download** the repository: git clone https://github.com/littlevgl/utils.git
+**Clone or download** the repository: `git clone https://github.com/littlevgl/utils.git`
 
 ### Image converter
 1. Copy an image to img_conv folder
