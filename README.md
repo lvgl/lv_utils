@@ -22,7 +22,7 @@ Both of the utilities are using Python scripts. So you has to install Python on 
 3. Type to the Terminal: `python img_cony.py test.png 16 1`. Parameters:
    * Image file name
    * Color depth: 8/16/24
-   * Set Transp. bit in the header or not (it means piselc with a specific are not drawn)
+   * Set Transp. bit in the header or not (it means pixels with a specific color are not drawn - aka color keying)
 4. Check the output *img_test.c* and *img_test.bin*
 
 For more iformation visit http://www.gl.littlev.hu/image-converter/
