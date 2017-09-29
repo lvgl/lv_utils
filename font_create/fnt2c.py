@@ -39,26 +39,26 @@ script_revision = '2014-05-24'
 # --------------------------------  READ ME  ------------------------------------
 #
 # bmfont2c.py reads bitmap font output from the Bitmap Font Generator by
-# AngelCode: http://www.angelcode.com/products/bmfont/  and outputs byte table 
+# AngelCode: http://www.angelcode.com/products/bmfont/  and outputs byte table
 # arrays in C language suitable for rendering on monochrome matrix LCD.
 #
-# The conversion process is configured in a configuration file. Multiple font 
-# conversions can be specified, which will result in multiple fonts being output 
+# The conversion process is configured in a configuration file. Multiple font
+# conversions can be specified, which will result in multiple fonts being output
 # in the same C header and source file.
 #
 # Usage: python bmfont2c.py <config filename>
 # or:    python bmfont2c.py   (will use "bmfont2c.cfg" as config filename)
 #
-# NOTE: When generating the font in BMFont remember to select XML format as the 
+# NOTE: When generating the font in BMFont remember to select XML format as the
 # font descriptor format.
 #
 # The script requires Pillow Python module for image processing, and should work
 # in both Python 2 and 3.
-# 
+#
 #
 # Example config file:
 # ---------------------
-# 
+#
 # [Font1]
 # InputFile = somefont.fnt
 # CFontName = SomeFont
@@ -68,8 +68,8 @@ script_revision = '2014-05-24'
 # BytesHeight = 16
 # CropX = 0
 # CropY = 3
-# FixedWidth = 0  
-# 
+# FixedWidth = 0
+#
 # [Font2]
 # InputFile = otherfont.fnt
 # CFontName = OtherFont
@@ -115,25 +115,25 @@ total_ram = 0
 
 
 class Config:
-    def __init__(self, cfg, section):        
+    def __init__(self, cfg, section):
         self.font_input  = cfg.get(section, "CFontName") + ".fnt"
         self.c_fontname  = cfg.get(section, "CFontName")
-        
+
         # Ascii range to grab
         self.first_ascii  = cfg.getint(section, "FirstAscii")
         self.last_ascii   = cfg.getint(section, "LastAscii")
-        
+
         # Glyph sizing
         self.bytes_width  = cfg.getint(section, "BytesWidth")
         self.bytes_height = cfg.getint(section, "BytesHeight")
         self.crop_x       = cfg.getint(section, "CropX")
         self.crop_y       = cfg.getint(section, "CropY")
-        
+
         if cfg.has_option(section, "FixedWidth"):
             self.fixed_width = cfg.getint(section, "FixedWidth")
         else:
             self.fixed_width = 0;
-                
+
 
 def makeFontStyleDecl(config):
     s = "\nstatic const font_t %s_dsc = \n" % config.c_fontname
@@ -157,140 +157,140 @@ def makeFontStyleDecl(config):
     s += "\n\n"
     s += "#endif"
     return s
-    
+
 def makeFontStyleHeader(config):
-    return "const font_t * %s_get_dsc(void);" % config.c_fontname 
-    
-    
+    return "const font_t * %s_get_dsc(void);" % config.c_fontname
+
+
 def makeBitmapsTable(config, img, glyphs):
     size = (config.last_ascii - config.first_ascii + 1) * config.bytes_width * config.bytes_height
     s = "\n%s %s_bitmaps[%u] = \n{" % (c_datatype, config.c_fontname, size)
     global total_ram
     total_ram += size
-    
-    for ascii in range(config.first_ascii, config.last_ascii + 1):        
+
+    for ascii in range(config.first_ascii, config.last_ascii + 1):
         # Find the glyph
         glyph_found = None
         for glyph in glyphs:
             if glyph.id == ascii:
                 glyph_found = glyph
                 break
-            
+
         if glyph_found is None:
             print("INFO: No glyph for ASCII: %d, using substitute" % ascii)
             s += "\n    // No glyph for ASCII: %d, using substitute:" % ascii
             # We use first glyph instead
             glyph_found = glyphs[0]
-            
-        s += glyph_found.makeBitmapCode(img, config.bytes_width * 8, config.bytes_height, 
+
+        s += glyph_found.makeBitmapCode(img, config.bytes_width * 8, config.bytes_height,
                              config.crop_x, config.crop_y)
-                    
+
     s += "};\n"
-    
+
     return s
-    
-    
+
+
 def makeWidthsTable(config, glyphs):
     count = config.last_ascii - config.first_ascii + 1
     s = "\n%s %s_widths[%u] = \n{" % (c_datatype, config.c_fontname, count)
     i = 0
     global total_ram
     total_ram += count
-    
-    for ascii in range(config.first_ascii, config.last_ascii + 1):        
+
+    for ascii in range(config.first_ascii, config.last_ascii + 1):
         # Find the glyph
         glyph_found = None
         for glyph in glyphs:
             if glyph.id == ascii:
                 glyph_found = glyph
                 break
-            
+
         if glyph_found is None:
             # We use first glyph instead
             glyph_found = glyphs[0]
-                        
-        if i == 0:                    
+
+        if i == 0:
             s += "\n    "
-        
-        i = (i + 1) % 8 
-        s += glyph_found.makeWidthCode()                            
-            
+
+        i = (i + 1) % 8
+        s += glyph_found.makeWidthCode()
+
     s += "\n};\n"
     return s
-    
-    
-def loadFont(config):    
+
+
+def loadFont(config):
     # Open xml
     print("Reading font description: " + config.font_input)
     font = minidom.parse(config.font_input)
-    
+
     # Open page 0 image:
     file = font.getElementsByTagName('page')[0].attributes['file'].value
     print("Reading font bitmap: " + file)
     img = image.open(file)
-    
+
     # Get the glyphs
     chars = font.getElementsByTagName('char')
-    
+
     glyphs = []
     for char in chars:
         glyphs.append(Glyph(char))
-        
+
     return (img, glyphs)
-    
+
 def makeFontSource(config):
     img, glyphs = loadFont(config)
-    
+
     source = makeBitmapsTable(config, img, glyphs)
-    
+
     if config.fixed_width == 0:
         source += makeWidthsTable(config, glyphs)
 
     source += makeFontStyleDecl(config)
 
     return source
- 
+
 def processConfig(cfg):
     # Get the general configuration
     output_header = cfg.get("Font1", "cFontName") + ".h"
     output_source = cfg.get("Font1", "cFontName") + ".c"
-    
+
     # Start up the header and source file
     header_pre = cfg.get("Font1", "cFontName") + "_H"
     header_pre = header_pre.upper()
     header = "#ifndef " + header_pre + "\n"
-    header += "#define " + header_pre + "\n\n"  
+    header += "#define " + header_pre + "\n\n"
     header += "/*Use ISO8859-1 encoding in the IDE*/\n\n"
-    header += '#include "lv_conf.h"\n'       
+    header += '#include "../../../misc_conf.h"\n'
     header += "#if  USE_FONT_%s != 0" % cfg.get("Font1", "cFontName").upper()
     header += header_start
 
-    source = '#include "lv_conf.h"\n'
-    source += '#if  USE_FONT_%s != 0\n' % cfg.get("Font1", "cFontName").upper()	
+    source = '#include "../../../misc_conf.h"\n'
+    source += '#if  USE_FONT_%s != 0\n' % cfg.get("Font1", "cFontName").upper()
     source += source_start
 
     font_no = 1
-    
+
     global total_ram
     total_ram = 0
-    
+
     while cfg.has_section("Font%d" % font_no):
         config = Config(cfg, "Font%d" % font_no)
         source = source + makeFontSource(config)
         header = header + makeFontStyleHeader(config)
         font_no += 1
-        
+
     header += header_end
-    
-    print("INFO: Font tables use: %u bytes" % total_ram)    
-    
+
+    print("INFO: Font tables use: %u bytes" % total_ram)
+
     print("Writing output: " + output_source)
-    
+
     with open(output_source, "w") as text_file:
         text_file.write(source)
-        
+
     print("Writing output: " + output_header)
-        
+
     with open(output_header, "w") as text_file:
         text_file.write(header)
 
@@ -301,9 +301,9 @@ class Glyph:
         self.x  = int(char.attributes['x'].value)
         self.y  = int(char.attributes['y'].value)
         self.width = int(char.attributes['width'].value)
-        self.height = int(char.attributes['height'].value)        
+        self.height = int(char.attributes['height'].value)
         self.xoffset  = int(char.attributes['xoffset'].value)
-        self.yoffset  = int(char.attributes['yoffset'].value)       
+        self.yoffset  = int(char.attributes['yoffset'].value)
         self.xadvance = int(char.attributes['xadvance'].value)
 
     def printRaw(self, img):
@@ -317,7 +317,7 @@ class Glyph:
                 else:
                     s += '0'
             print(s)
-            
+
     def printNormalized(self, img, width, height, crop_x = 0, crop_y = 0):
         for y in range(0, height):
             s = ""
@@ -328,10 +328,10 @@ class Glyph:
                 if (use_x >= 0) and (use_x < self.width) and (use_y >= 0) and (use_y < self.height):
                     if img.getpixel((use_x + self.x, use_y + self.y)) > 127:
                         pixel = '1'
-                        
+
                 s += pixel
             print(s)
-        
+
     def makeBitmapCode(self, img, width, height, crop_x = 0, crop_y = 0):
         s = '\n    // ASCII: %d, char width: %d' % (self.id, self.xadvance)
         for y in range(0, height):
@@ -346,7 +346,7 @@ class Glyph:
                 if (use_x >= 0) and (use_x < self.width) and (use_y >= 0) and (use_y < self.height):
                     if img.getpixel((use_x + self.x, use_y + self.y)) > 127:
                         pixel = 1
-                        
+
                 if pixel != 0:
                     comment += 'O'
                     byte |= mask
@@ -355,36 +355,36 @@ class Glyph:
                         comment += '.'
                     else:
                         comment += '-'
-                
+
                 mask = mask // 2
-                
+
                 if mask == 0:
                     bytestring += "0x%02x, " % byte
                     mask = 128
                     byte = 0
-                    
+
             if mask != 128:
                 bytestring += "0x%02x, " % byte
-            
+
             s += "\n    " + bytestring + " // " + comment
-            
+
         return s + "\n"
-        
+
     def makeWidthCode(self):
         return '%2d, ' % (self.xadvance)
-        
-if __name__ == "__main__":    
+
+if __name__ == "__main__":
     print("BMFont to C source converter by Lars Ole Pontoppidan, %s\n" % script_revision)
-        
+
     if len(sys.argv) == 2:
         cfgfile = sys.argv[1]
     elif len(sys.argv) == 1:
         cfgfile = 'bmfont2c.cfg'
-    else:        
+    else:
         print("ERROR: Invalid command line arguments\n")
         exit()
-    
-    if os.path.isfile(cfgfile):        
+
+    if os.path.isfile(cfgfile):
         print("Reading configuration file: " + cfgfile)
         cfg = configparser.ConfigParser()
         cfg.read(cfgfile)
