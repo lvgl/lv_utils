@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<font>
+  <info face="FontAwesome" size="15" bold="0" italic="0" charset="" unicode="1" stretchH="100" smooth="1" aa="1" padding="0,0,0,0" spacing="1,1" outline="0"/>
+  <common lineHeight="15" base="13" scaleW="2048" scaleH="2048" pages="1" packed="0" alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0"/>
+  <pages>
+    <page id="0" file="symbol_15_basic_0.png" />
+  </pages>
+  <chars count="14">
+    <char id="61451" x="70" y="0" width="17" height="12" xoffset="-1" yoffset="1" xadvance="15" page="0" chnl="15" />
+    <char id="61452" x="120" y="0" width="15" height="11" xoffset="0" yoffset="2" xadvance="15" page="0" chnl="15" />
+    <char id="61453" x="172" y="0" width="12" height="10" xoffset="0" yoffset="3" xadvance="12" page="0" chnl="15" />
+    <char id="61457" x="0" y="0" width="14" height="15" xoffset="-1" yoffset="0" xadvance="13" page="0" chnl="15" />
+    <char id="61459" x="15" y="0" width="15" height="14" xoffset="-1" yoffset="1" xadvance="13" page="0" chnl="15" />
+    <char id="61461" x="103" y="0" width="16" height="11" xoffset="-1" yoffset="2" xadvance="14" page="0" chnl="15" />
+    <char id="61473" x="31" y="0" width="15" height="14" xoffset="-1" yoffset="1" xadvance="13" page="0" chnl="15" />
+    <char id="61523" x="47" y="0" width="11" height="14" xoffset="0" yoffset="0" xadvance="11" page="0" chnl="15" />
+    <char id="61524" x="59" y="0" width="10" height="14" xoffset="0" yoffset="0" xadvance="11" page="0" chnl="15" />
+    <char id="61543" x="88" y="0" width="14" height="12" xoffset="-1" yoffset="1" xadvance="12" page="0" chnl="15" />
+    <char id="61544" x="201" y="0" width="14" height="4" xoffset="-1" yoffset="5" xadvance="12" page="0" chnl="15" />
+    <char id="61559" x="185" y="0" width="15" height="9" xoffset="0" yoffset="4" xadvance="15" page="0" chnl="15" />
+    <char id="61560" x="155" y="0" width="16" height="10" xoffset="0" yoffset="4" xadvance="15" page="0" chnl="15" />
+    <char id="61724" x="136" y="0" width="18" height="10" xoffset="-1" yoffset="3" xadvance="16" page="0" chnl="15" />
+  </chars>
+</font>

@@ -49,18 +49,18 @@ script_revision = '2017-09-24'
 #      - Texture: png
 # 
 #Usage
-#  python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>]
+#  python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide> -i]
 #
 # Options
 #   -f, --font    name of the font file without any extension (e.g. arial_10)
 #   -o, --output  name of the output file without any extension (e.g. arial_10_cyrillic).   Optional, default: font name
 #   -s, --start   first unicode charater to convert (e.g. 1024).                            Optional, default: 32
 #   -e, --end     last unicode charater to convert (e.g. 1279).                             Optional, default: 126
-#
+#   -i  --autoinc start adress of ato increment                                             Optional, default: OFF
 # Example
 #  Convert the ASCII characters from dejavu_20.fnt/png and save to devaju_20.c/h         
-#    python fnt2c.py -f dejavu_20
-#
+#    python fnt2c.py -f dejavu_20    
+#    
 #  Convert the Cyrillic code page from dejavu_20.fnt/png and save to devaju_20_cyrillic.c/h
 #    python fnt2c.py -f dejavu_20 -o dejavu_20_cyrillic -s 1024 -e 1279
 
@@ -79,21 +79,24 @@ class Config:
         # Ascii range to grab
         self.first_unicode  = 32
         self.last_unicode   = 126
+        self.autoinc = -1
+        self.glyph_cnt = 0
         
         try:
-            opts, args = getopt.getopt(argv, "f:o:s:e:h",["font=","output=","start=","end=","help"])
+            opts, args = getopt.getopt(argv, "f:o:s:e:i:h",["font=","output=","start=","end=","help", "autoinc"])
         except getopt.GetoptError:
-            print 'Usage: python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>]' 
+            print 'Usage: python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide> -i <auto inc. start>]' 
             sys.exit(2)
         for opt, arg in opts:
             if opt in ('-h', '--help'):
                 print 'Usage' 
-                print '  python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>]\n'
+                print '  python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>  -i <auto inc. start>]\n'
                 print 'Options' 
                 print '  -f, --font    name of the font file without any extension (e.g. arial_10)'
                 print '  -o, --output  name of the output file without any extension (e.g. arial_10_cyrillic).   Optional, default: font name '
                 print '  -s, --start   first unicode charater to convert (e.g. 1024).                            Optional, default: 32'
                 print '  -e, --end     last unicode charater to convert (e.g. 1279).                             Optional, default: 126\n'
+                print '  -i  --autoinc start adress of ato increment                                             Optional, default: OFF'
                 print 'Example' 
                 print '  Convert the ASCII characters from dejavu_20.fnt/png and save to devaju_20.c/h'              
                 print '    python fnt2c.py -f dejavu_20\n'
@@ -108,10 +111,12 @@ class Config:
                 self.first_unicode = int(arg)
             elif opt in ("-e", "--end"):
                 self.last_unicode = int(arg)
+            elif opt in ("-i", "--autoinc"):
+                self.autoinc = int(arg)
 
         if self.font == "":
             print "ERROR: No font specified"
-            print "       Usage: -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>]" 
+            print "       Usage: -f <font_name>[-o <output file> -s <start unicode> -e <end unicide>  -i <auto inc. start>]" 
             sys.exit()
         
         
@@ -121,8 +126,13 @@ class Config:
 def makeFontStyleDecl(config):
     s = "\nstatic font_t %s_dsc = \n" % config.output_file
     s += "{\n"
-    s += "    %d,        /*First letter's unicode */\n" % (config.first_unicode)
-    s += "    %d,        /*Last letter's unicode */\n" % config.last_unicode
+    if config.autoinc >= 0:
+        s += "    %d,        /*First letter's unicode */\n" % config.autoinc
+        s += "    %d,        /*Last letter's unicode */\n" % (config.autoinc + config.glyph_cnt)
+    else: 
+        s += "    %d,        /*First letter's unicode */\n" % (config.first_unicode)
+        s += "    %d,        /*Last letter's unicode */\n" % config.last_unicode
+    
     s += "    %d,        /*Letters height (rows) */\n" % config.height
     s += "    %s_bitmap,    /*Glyph's bitmap*/\n" % config.output_file
     s += "    %s_map,    /*Glyph start indexes in the bitmap*/\n" % config.output_file
@@ -140,9 +150,12 @@ def makeFontStyleDecl(config):
     
 def makeBitmapsTable(config, img, glyphs):
 
-    s = "/*Store the image (glyph) of the letters*/\nstatic const uint8_t %s_bitmap[] = \n{" % (config.output_file)
+    s = "/*Store the image of the letters (glyph) */\nstatic const uint8_t %s_bitmap[] = \n{" % (config.output_file)
+    autoinc_tmp = config.autoinc
+    
     
     for ascii in range(config.first_unicode, config.last_unicode + 1):        
+        
         # Find the glyph
         glyph_found = None
         for glyph in glyphs:
@@ -151,14 +164,25 @@ def makeBitmapsTable(config, img, glyphs):
                 break
             
         if glyph_found is None:
-            print("INFO: No glyph for U+%d, using substitute" % ascii)
-            s += "\n    // No glyph for U+%d, using substitute:" % ascii
+            if config.autoinc >= 0: 
+                continue
+            print("INFO: No glyph for U+%d, using substitute" % hex(ascii).split('x')[-1]) 
+            s += "\n    // No glyph for U+%d, using substitute:" % hex(ascii).split('x')[-1]
             # We use first glyph instead
             glyph_found = glyphs[0]
             
+            
+        if config.autoinc >= 0:
+            glyph_found.id = autoinc_tmp
+            autoinc_tmp = autoinc_tmp + 1
         s += glyph_found.makeBitmapCode(img, config.height)
                     
+                    
+        if config.autoinc >= 0:
+            glyph_found.id = ascii  #Restore ID
     s += "};\n"
+    
+    config.glyph_cnt = autoinc_tmp - config.autoinc;
     
     return s
     
@@ -176,6 +200,8 @@ def makeWidthsTable(config, glyphs):
                 break
             
         if glyph_found is None:
+            if config.autoinc >= 0: 
+                continue
             # We use first glyph instead
             glyph_found = glyphs[0]
                         
@@ -191,7 +217,6 @@ def makeWidthsTable(config, glyphs):
 
 def makeMapTable(config, glyphs):
     font_map_s = "/*Store the start index of the glyphs in the bitmap array*/\nstatic const uint32_t %s_map[] = \n{" % (config.output_file)
-    
     i = 0
     w_act = 0
     
@@ -204,6 +229,8 @@ def makeMapTable(config, glyphs):
                 break
             
         if glyph_found is None:
+            if config.autoinc >= 0: 
+                continue
             # We use first glyph instead
             glyph_found = glyphs[0]
                         
@@ -250,6 +277,8 @@ def loadFont(config):
     print "Heght: %s" % config.height
     print "First unicode: %s" % config.first_unicode
     print "Last unicode: %s" % config.last_unicode
+    if config.autoinc >= 0: print "Auto increment start: %s" % config.autoinc
+    else: print "Auto increment: OFF" 
     print "-----------------"
     
     
@@ -286,14 +315,14 @@ def processConfig(conf):
     header += "/*Use UTF-8 encoding in the IDE*/\n\n"
     header += '#include "misc_conf.h"\n\n'       
     header += "#if  USE_FONT_%s != 0\n\n" % conf.output_file.upper()
-    header += '#include <stdint.h>\n#include "../font.h"\n\n'
+    header += '#include <stdint.h>\n#include "misc/gfx/font.h"\n\n'
     header += "font_t * %s_get_dsc(void);\n\n" % conf.output_file
     header += "#endif   /*USE_FONT_%s != 0*/\n\n" % conf.output_file.upper()
     header += "#endif   /*%s_H*/" % conf.output_file.upper()
     
     source = '#include "misc_conf.h"\n'
     source += '#if  USE_FONT_%s != 0\n' % conf.output_file.upper()	
-    source += '#include <stdint.h>\n#include "../font.h"\n'
+    source += '#include <stdint.h>\n#include "misc/gfx/font.h"\n'
     
     source += makeFontSource(conf);
     

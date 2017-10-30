@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<font>
+  <info face="FontAwesome" size="40" bold="0" italic="0" charset="" unicode="1" stretchH="100" smooth="1" aa="1" padding="0,0,0,0" spacing="1,1" outline="0"/>
+  <common lineHeight="40" base="34" scaleW="2048" scaleH="2048" pages="1" packed="0" alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0"/>
+  <pages>
+    <page id="0" file="symbol_40_basic_0.png" />
+  </pages>
+  <chars count="14">
+    <char id="61451" x="164" y="0" width="42" height="32" xoffset="-1" yoffset="2" xadvance="40" page="0" chnl="15" />
+    <char id="61452" x="281" y="0" width="36" height="27" xoffset="2" yoffset="7" xadvance="40" page="0" chnl="15" />
+    <char id="61453" x="318" y="0" width="29" height="27" xoffset="1" yoffset="8" xadvance="31" page="0" chnl="15" />
+    <char id="61457" x="0" y="0" width="36" height="37" xoffset="-1" yoffset="0" xadvance="34" page="0" chnl="15" />
+    <char id="61459" x="90" y="0" width="36" height="35" xoffset="-1" yoffset="2" xadvance="34" page="0" chnl="15" />
+    <char id="61461" x="242" y="0" width="38" height="29" xoffset="0" yoffset="5" xadvance="37" page="0" chnl="15" />
+    <char id="61473" x="127" y="0" width="36" height="35" xoffset="-1" yoffset="2" xadvance="34" page="0" chnl="15" />
+    <char id="61523" x="37" y="0" width="26" height="36" xoffset="2" yoffset="0" xadvance="29" page="0" chnl="15" />
+    <char id="61524" x="64" y="0" width="25" height="36" xoffset="1" yoffset="0" xadvance="29" page="0" chnl="15" />
+    <char id="61543" x="207" y="0" width="34" height="32" xoffset="-1" yoffset="2" xadvance="31" page="0" chnl="15" />
+    <char id="61544" x="472" y="0" width="34" height="9" xoffset="-1" yoffset="14" xadvance="31" page="0" chnl="15" />
+    <char id="61559" x="394" y="0" width="38" height="24" xoffset="1" yoffset="10" xadvance="40" page="0" chnl="15" />
+    <char id="61560" x="433" y="0" width="38" height="24" xoffset="1" yoffset="11" xadvance="40" page="0" chnl="15" />
+    <char id="61724" x="348" y="0" width="45" height="26" xoffset="-1" yoffset="8" xadvance="43" page="0" chnl="15" />
+  </chars>
+</font>
