@@ -124,11 +124,38 @@ class Config:
         if(self.output_file == ""): self.output_file = self.font        
         
 def makeFontStyleDecl(config):
-    s = "\nstatic font_t %s_dsc = \n" % config.output_file
+    s = "\nfont_t font_%s = \n" % config.output_file
     s += "{\n"
     if config.autoinc >= 0:
-        s += "    %d,        /*First letter's unicode */\n" % config.autoinc
-        s += "    %d,        /*Last letter's unicode */\n" % (config.autoinc + config.glyph_cnt)
+        if config.autoinc == 57344:  #basic symbols defined for non UTF-8 usage too
+            s += "#if TXT_UTF8 == 0\n"
+            s += "    192,        /*First letter's unicode */\n" 
+            s += "    207,        /*Last letter's unicode */\n" 
+            s += "#else\n"
+            s += "    %d,        /*First letter's unicode */\n" % config.autoinc
+            s += "    %d,        /*Last letter's unicode */\n" % (config.autoinc + config.glyph_cnt) 
+            s += "#endif\n"
+            
+        elif config.autoinc == 57408:  #feedback symbols defined for non UTF-8 usage too
+            s += "#if TXT_UTF8 == 0\n"
+            s += "    208,        /*First letter's unicode */\n" 
+            s += "    223,        /*Last letter's unicode */\n" 
+            s += "#else\n"
+            s += "    %d,        /*First letter's unicode */\n" % config.autoinc
+            s += "    %d,        /*Last letter's unicode */\n" % (config.autoinc + config.glyph_cnt) 
+            s += "#endif\n"
+            
+        elif config.autoinc == 57376:  #file symbols defined for non UTF-8 usage too
+            s += "#if TXT_UTF8 == 0\n"
+            s += "    224,        /*First letter's unicode */\n" 
+            s += "    255,        /*Last letter's unicode */\n" 
+            s += "#else\n"
+            s += "    %d,        /*First letter's unicode */\n" % config.autoinc
+            s += "    %d,        /*Last letter's unicode */\n" % (config.autoinc + config.glyph_cnt) 
+            s += "#endif\n"
+        else:
+            s += "    %d,        /*First letter's unicode */\n" % config.autoinc
+            s += "    %d,        /*Last letter's unicode */\n" % (config.autoinc + config.glyph_cnt) 
     else: 
         s += "    %d,        /*First letter's unicode */\n" % (config.first_unicode)
         s += "    %d,        /*Last letter's unicode */\n" % config.last_unicode
@@ -138,12 +165,6 @@ def makeFontStyleDecl(config):
     s += "    %s_map,    /*Glyph start indexes in the bitmap*/\n" % config.output_file
     s += "    %s_width,    /*Glyph widths (columns)*/\n" % config.output_file
     s += "};\n\n"
-    s += "/*Function pointer which gives a pointer to the dsc. variable*/\n"
-    s += "font_t * %s_get_dsc(void)\n" % config.output_file
-    s += "{\n"
-    s += "    return &%s_dsc;\n" % config.output_file
-    s += "}\n"
-    s += "\n\n"
     s += "#endif /*%s_H*/" % config.output_file.upper();
     return s
     
@@ -166,8 +187,8 @@ def makeBitmapsTable(config, img, glyphs):
         if glyph_found is None:
             if config.autoinc >= 0: 
                 continue
-            print("INFO: No glyph for U+%d, using substitute" % hex(ascii).split('x')[-1]) 
-            s += "\n    // No glyph for U+%d, using substitute:" % hex(ascii).split('x')[-1]
+            print("INFO: No glyph for U+%s, using substitute" % hex(ascii).split('x')[-1]) 
+            s += "\n    // No glyph for U+%s, using substitute" % hex(ascii).split('x')[-1]
             # We use first glyph instead
             glyph_found = glyphs[0]
             
@@ -316,7 +337,7 @@ def processConfig(conf):
     header += '#include "misc_conf.h"\n\n'       
     header += "#if  USE_FONT_%s != 0\n\n" % conf.output_file.upper()
     header += '#include <stdint.h>\n#include "misc/gfx/font.h"\n\n'
-    header += "font_t * %s_get_dsc(void);\n\n" % conf.output_file
+    header += "extern font_t font_%s;\n\n" % conf.output_file
     header += "#endif   /*USE_FONT_%s != 0*/\n\n" % conf.output_file.upper()
     header += "#endif   /*%s_H*/" % conf.output_file.upper()
     

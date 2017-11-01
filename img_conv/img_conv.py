@@ -65,7 +65,7 @@ f_txt.write(inc)
 
 #Create the output bin file
 fn_bin = "img_" + fn_base + ".bin"
-f_bin = open(fn_bin, 'w')
+f_bin = open(fn_bin, 'wb')
 
 cd_bin = 0;
 if(cd == "8"): 
