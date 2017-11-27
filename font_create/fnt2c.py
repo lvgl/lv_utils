@@ -80,23 +80,25 @@ class Config:
         self.first_unicode  = 32
         self.last_unicode   = 126
         self.autoinc = -1
+        self.sys = 0
         self.glyph_cnt = 0
         
         try:
-            opts, args = getopt.getopt(argv, "f:o:s:e:i:h",["font=","output=","start=","end=","help", "autoinc"])
+            opts, args = getopt.getopt(argv, "f:o:s:e:i:h",["font=","output=","start=","end=","help", "autoinc", "sys"])
         except getopt.GetoptError:
             print 'Usage: python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide> -i <auto inc. start>]' 
             sys.exit(2)
         for opt, arg in opts:
             if opt in ('-h', '--help'):
                 print 'Usage' 
-                print '  python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>  -i <auto inc. start>]\n'
+                print '  python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>  -i <auto inc. start> --sys]\n'
                 print 'Options' 
                 print '  -f, --font    name of the font file without any extension (e.g. arial_10)'
                 print '  -o, --output  name of the output file without any extension (e.g. arial_10_cyrillic).   Optional, default: font name '
                 print '  -s, --start   first unicode charater to convert (e.g. 1024).                            Optional, default: 32'
                 print '  -e, --end     last unicode charater to convert (e.g. 1279).                             Optional, default: 126\n'
-                print '  -i  --autoinc start adress of ato increment                                             Optional, default: OFF'
+                print '  -i  --autoinc start adress of auto increment                                             Optional, default: OFF'
+                print '  --sys         create as built in font (to be enabled in lv_conf.h and strored in lv_misc/lv_fonts/)'
                 print 'Example' 
                 print '  Convert the ASCII characters from dejavu_20.fnt/png and save to devaju_20.c/h'              
                 print '    python fnt2c.py -f dejavu_20\n'
@@ -113,10 +115,12 @@ class Config:
                 self.last_unicode = int(arg)
             elif opt in ("-i", "--autoinc"):
                 self.autoinc = int(arg)
+            elif opt in ("--sys"):
+                self.sys = 1
 
         if self.font == "":
             print "ERROR: No font specified"
-            print "       Usage: -f <font_name>[-o <output file> -s <start unicode> -e <end unicide>  -i <auto inc. start>]" 
+            print "       Usage: -f <font_name>[-o <output file> -s <start unicode> -e <end unicide>  -i <auto inc. start> --sys]" 
             sys.exit()
         
         
@@ -124,7 +128,10 @@ class Config:
         if(self.output_file == ""): self.output_file = self.font        
         
 def makeFontStyleDecl(config):
-    s = "\nfont_t font_%s = \n" % config.output_file
+    if config.sys :
+        s = "\nlv_font_t lv_font_%s = \n" % config.output_file
+    else :
+        s = "\nlv_font_t font_%s = \n" % config.output_file
     s += "{\n"
     if config.autoinc >= 0:
         if config.autoinc == 57344:  #basic symbols defined for non UTF-8 usage too
@@ -165,7 +172,8 @@ def makeFontStyleDecl(config):
     s += "    %s_map,    /*Glyph start indexes in the bitmap*/\n" % config.output_file
     s += "    %s_width,    /*Glyph widths (columns)*/\n" % config.output_file
     s += "};\n\n"
-    s += "#endif /*%s_H*/" % config.output_file.upper();
+    if(config.sys):
+      s += "#endif /*USE_LV_FONT_" + config.output_file.upper() +"*/\n"
     return s
     
     
@@ -334,17 +342,29 @@ def processConfig(conf):
     header = "#ifndef " + conf.output_file.upper() + "_H\n"
     header += "#define " + conf.output_file.upper() + "_H\n\n"  
     header += "/*Use UTF-8 encoding in the IDE*/\n\n"
-    header += '#include "misc_conf.h"\n\n'       
-    header += "#if  USE_FONT_%s != 0\n\n" % conf.output_file.upper()
-    header += '#include <stdint.h>\n#include "misc/gfx/font.h"\n\n'
-    header += "extern font_t font_%s;\n\n" % conf.output_file
-    header += "#endif   /*USE_FONT_%s != 0*/\n\n" % conf.output_file.upper()
+    if(conf.sys):
+      header += '#include "../../../lv_conf.h"\n'
+      header += "#if USE_LV_FONT_" + conf.output_file.upper() + "\n\n"
+
+    header += '#include <stdint.h>\n#include "lvgl/lv_misc/lv_font.h"\n\n'
+    if(conf.sys):
+      header += "extern lv_font_t lv_font_%s;\n\n" % conf.output_file
+    else:
+      header += "extern lv_font_t font_%s;\n\n" % conf.output_file
+
+    if(conf.sys):
+      header += "#endif /*USE_LV_FONT_" + conf.output_file.upper() +"*/\n"
     header += "#endif   /*%s_H*/" % conf.output_file.upper()
-    
-    source = '#include "misc_conf.h"\n'
-    source += '#if  USE_FONT_%s != 0\n' % conf.output_file.upper()	
-    source += '#include <stdint.h>\n#include "misc/gfx/font.h"\n'
-    
+
+    source = "";        
+    if(conf.sys):
+      source += '#include "../../../lv_conf.h"\n'
+      source += "#if USE_LV_FONT_" + conf.output_file.upper() + "\n\n"
+      source += '#include <stdint.h>\n#include "../lv_font.h"\n'
+    else :
+      source += '#include <stdint.h>\n#include "lvgl/lv_misc/lv_font.h"\n\n'
+           
+
     source += makeFontSource(conf);
     
     print("Writing output: " + output_source) 
