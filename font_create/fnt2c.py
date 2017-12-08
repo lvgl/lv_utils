@@ -171,7 +171,7 @@ def makeFontStyleDecl(config):
     s += "    %s_bitmap,    /*Glyph's bitmap*/\n" % config.output_file
     s += "    %s_map,    /*Glyph start indexes in the bitmap*/\n" % config.output_file
     s += "    %s_width,    /*Glyph widths (columns)*/\n" % config.output_file
-    s += "    NULL         /*No next page by default*/
+    s += "    NULL         /*No next page by default*/\n"
     s += "};\n\n"
     if(config.sys):
       s += "#endif /*USE_LV_FONT_" + config.output_file.upper() +"*/\n"
@@ -239,6 +239,7 @@ def makeWidthsTable(config, glyphs):
             width_map_s += "\n    "
         
         i = (i + 1) % 8 
+        
         width_map_s += '%2d, ' % (glyph_found.xadvance)
 
             
@@ -346,8 +347,9 @@ def processConfig(conf):
     if(conf.sys):
       header += '#include "../../../lv_conf.h"\n'
       header += "#if USE_LV_FONT_" + conf.output_file.upper() + "\n\n"
-
-    header += '#include <stdint.h>\n#include "lvgl/lv_misc/lv_font.h"\n\n'
+      header += '#include <stdint.h>\n#include "../lv_font.h"\n\n'
+    else:
+      header += '#include <stdint.h>\n#include "lvgl/lv_misc/lv_font.h"\n\n'
     if(conf.sys):
       header += "extern lv_font_t lv_font_%s;\n\n" % conf.output_file
     else:
