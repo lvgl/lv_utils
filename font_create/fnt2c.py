@@ -135,7 +135,7 @@ def makeFontStyleDecl(config):
     s += "{\n"
     if config.autoinc >= 0:
         if config.autoinc == 57344:  #basic symbols defined for non UTF-8 usage too
-            s += "#if TXT_UTF8 == 0\n"
+            s += "#if LV_TXT_UTF8 == 0\n"
             s += "    192,        /*First letter's unicode */\n" 
             s += "    207,        /*Last letter's unicode */\n" 
             s += "#else\n"
@@ -144,7 +144,7 @@ def makeFontStyleDecl(config):
             s += "#endif\n"
             
         elif config.autoinc == 57408:  #feedback symbols defined for non UTF-8 usage too
-            s += "#if TXT_UTF8 == 0\n"
+            s += "#if LV_TXT_UTF8 == 0\n"
             s += "    208,        /*First letter's unicode */\n" 
             s += "    223,        /*Last letter's unicode */\n" 
             s += "#else\n"
@@ -153,7 +153,7 @@ def makeFontStyleDecl(config):
             s += "#endif\n"
             
         elif config.autoinc == 57376:  #file symbols defined for non UTF-8 usage too
-            s += "#if TXT_UTF8 == 0\n"
+            s += "#if LV_TXT_UTF8 == 0\n"
             s += "    224,        /*First letter's unicode */\n" 
             s += "    255,        /*Last letter's unicode */\n" 
             s += "#else\n"
