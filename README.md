@@ -27,9 +27,9 @@ The binary file an be used on external memory devices (e.g. SD card)
 1. Copy an image to img_conv folder
 2. Open a Terminal and go to this directory
 3. Type to the Terminal: `python img_cony.py -f test.png -c 16`. Parameters:
-   * -f: Image file name
-   * -c Color depth: 8/16/24 (only for the binary file)
-   * -t Chroma keyed: pixels with a specific color (lv_conf.h LV_COLOR_TRANSP) are not drawn
+   * **-f**: Image file name
+   * **-c** Color depth: 8/16/24 (only for the binary file)
+   * **-t** Chroma keyed: pixels with a specific color (lv_conf.h LV_COLOR_TRANSP) are not drawn
 4. Check the output *img_test.c* and *img_test.bin*
 
 
@@ -44,10 +44,10 @@ arrays in C language which is compatible with LittlevGL fonts.
    2. In **Options/Export settings** choose XML file format and .png texture. Set the texture width and height to 2048.
    3. Save the *fnt* file: **Options/Save bitmap font as…**
 3. fnt2.c.py usage: `python fnt2c.py -f <font_name> [-o <output file> -s <start unicode> -e <end unicide>]`
-   * -f, --font    name of the font file without any extension (e.g. arial_10)
-   * -o, --output  name of the output file without any extension (e.g. arial_10_cyrillic).   Optional, default: font name
-   * -s, --start   first unicode charater to convert (e.g. 1024).                            Optional, default: 32
-   * -e, --end     last unicode charater to convert (e.g. 1279).                             Optional, default: 126
+   * **-f, --font**    name of the font file without any extension (e.g. arial_10)
+   * **-o, --output**  name of the output file without any extension (e.g. arial_10_cyrillic).   Optional, default: font name
+   * **-s, --start**   first unicode charater to convert (e.g. 1024).                            Optional, default: 32
+   * **-e, --end**     last unicode charater to convert (e.g. 1279).                             Optional, default: 126
 4. Convert the ASCII characters from dejavu_20.fnt/png and save to devaju_20.c/h: 
    * `python fnt2c.py -f dejavu_20`
 5. Convert the Cyrillic code page from dejavu_20.fnt/png and save to devaju_20_cyrillic.c/h: 

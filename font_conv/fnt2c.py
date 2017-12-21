@@ -6,7 +6,7 @@
 # Author      : Lars Ole Pontoppidan, 2014, Modified by Gabor Kiss-Vamosi for LittelvGL, 2017
 # URL         : http://larsee.dk/, http://www.gl.littlev.hu
 
-script_revision = '2017-09-24'
+script_revision = '2018-12-20'
 
 # --------------------------------  LICENSE  -----------------------------------
 #
