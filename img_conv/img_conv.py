@@ -120,7 +120,7 @@ def img_proc():
 
     f_txt.write("const lv_color_int_t img_" + fn_base + "[] = {\r\n")
     
-    txt_c8 += "#if LV_COLOR_DEPTH == 8\r\n  " + str(header & 0xFF) + ", " + str((header >> 8) & 0xFF) + ", " + str((header >> 16) & 0xFF) + ", " + str((header >> 24) & 0xFF) + ","
+    txt_c8 += "#if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8\r\n  " + str(header & 0xFF) + ", " + str((header >> 8) & 0xFF) + ", " + str((header >> 16) & 0xFF) + ", " + str((header >> 24) & 0xFF) + ","
     txt_c8 += "  /* HEADER */\r\n\r\n  /*IMAGE DATA*/\r\n  "
     txt_c16 += "#elif LV_COLOR_DEPTH == 16\r\n  " + str(header & 0xFFFF) + ", " + str((header >> 16) & 0xFFFF) + ","
     txt_c16 += "  /* HEADER */\r\n\r\n  /*IMAGE DATA*/\r\n  "
@@ -190,15 +190,15 @@ def img_proc():
     f_bin.close()
 
     print "Conversion is ready"
-    print "Data is written into: img_" + fn_base + ".c/h and img_" + fn_base + ".bin"
+    print "Data is written into: img_" + fn_base + ".c and img_" + fn_base + ".bin"
     print "-----------------"
     print "FINISHED"  
 
 
 def main(argv):
-    print "-----------------"
+    print "-------------------------------"
     print "Image converter for LittlevGL"
-    print "-----------------"
+    print "-------------------------------"
     conf_init(argv)
     img_proc()        
 
