@@ -8,13 +8,12 @@ to **raw C arrays**.
 The utilities are written to be compatible with the **Littlev Graphics Library**. 
 
 GitHub: https://github.com/littlevgl/lvgl
-
 Website: http://www.gl.littlev.hu
 
 ## Usage
 Both of the utilities are Python scripts. So you has to install Python on your operation system.
 
-**Clone or download** the repository: `git clone https://github.com/littlevgl/utils.git`
+**Clone or download** the repository: `git clone https://github.com/littlevgl/lv_utils.git`
 
 ### Image converter
 It vraetes a `c` and a `bin` file fro mthe image. 
@@ -32,6 +31,7 @@ The binary file an be used on external memory devices (e.g. SD card)
    * **-t** Chroma keyed: pixels with a specific color (lv_conf.h LV_COLOR_TRANSP) are not drawn
 4. Check the output *img_test.c* and *img_test.bin*
 
+For more information visit: http://www.gl.littlev.hu/image-converter/
 
 ### Font converter
 fnt2c.py reads bitmap font output from the Bitmap Font Generator by
@@ -52,4 +52,8 @@ arrays in C language which is compatible with LittlevGL fonts.
    * `python fnt2c.py -f dejavu_20`
 5. Convert the Cyrillic code page from dejavu_20.fnt/png and save to devaju_20_cyrillic.c/h: 
    * `python fnt2c.py -f dejavu_20 -o dejavu_20_cyrillic -s 1024 -e 1279`
+
+e them in your project
+
+For more information visit: http://www.gl.littlev.hu/font-converter/
 
