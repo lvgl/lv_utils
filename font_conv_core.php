@@ -1,14 +1,20 @@
 <?php
+
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
+header("Pragma: no-cache");
+
+
 putenv('GDFONTPATH=' . realpath('.'));
 
 $font_file = $_FILES["font_file"]["tmp_name"];
 $font_name = $_FILES["font_file"]["name"];
 $output_name = $_POST["name"];
 $h_px = $_POST["height"];
-$h_pt = $h_px  * 3;//3 / 4;
+$h_pt = $h_px  * 3;
 $bpp = $_POST['bpp'];  
 $builtin = $_POST["built_in"];
-$canvas_w = 100;//5 * $h_pt;
+$canvas_w = 5 * $h_px;
 $c_src = "";
 $c_glyph_bitmap = "";
 $c_glyph_dsc = "";
@@ -44,7 +50,6 @@ $c_info = "/********************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with $bpp bpp";
 
 if(strlen($unicode_list) != 0) {
-    //echo(strlen($unicode_list) . " ");
     $unicode_list = html_entity_decode($unicode_list, ENT_COMPAT | ENT_HTML401, ini_get("default_charset"));
     //echo(strlen($unicode_list));
 	$list_rep = str_replace("\\", "\\\\", $unicode_list);
@@ -119,6 +124,7 @@ $c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
 // Create the image
 $im = imagecreatetruecolor($canvas_w, $h_px);
 
+
 if(!$builtin) {
     convert_all_letters();
 } else {
@@ -162,11 +168,9 @@ if($builtin) {
     $c_src .= "\n\n#endif /*USE_". strtoupper($output_name) . "*/\n";
 }
 
-//mail_attachment("$output_name.c","kisvegabor@gmail.com", "font-converter@littelvgl.com",  "[LittelvGL] Font converter", "font-converter@littelvgl.com", "$font_file_name download", "<h2>Tessek egy ket jo font</h2> ez meg a body<br>ujsor");
-
 imagedestroy($im);
 
-download($output_name, $c_src, "alma header");
+download($output_name, $c_src);
 
 
 function convert_all_letters()
@@ -185,6 +189,7 @@ function convert_all_letters()
     // Create some colors
     $white = imagecolorallocate($im, 255, 255, 255);
     $black = imagecolorallocate($im, 0, 0, 0);
+
 
     if(strlen($unicode_list) == 0) {
         for($unicode_act = $unicode_start; $unicode_act <= $unicode_last; $unicode_act++) {
@@ -244,15 +249,6 @@ function height_corr()
             break;
         }
     }
-    
-    //echo("New height pt: " . $h_pt. "base line ofs: $base_line_ofs <br>");
-   /*
-    $h_pt = floor($h_pt/3) * 3;      
-    $co = imagettftext($im, $h_pt, 0, 0, $h_pt, $white, $font_file, $test_text );
-    
-    $h = $co[1] - $co[7];
-    $base_line_ofs = - $co[7]; */
-    //echo("New height pt mod: " . $h_pt. "base line ofs: $base_line_ofs <br>");
 }
 
 function utf8($num)
@@ -375,25 +371,11 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
 }
 
 
-function download($name, $c_data, $h_data)
+function download($name, $c_data)
 {
-/*
-    $zipname = $name.'.zip';
-    $zip = new ZipArchive;
-    $zip->open($zipname, ZipArchive::CREATE);
-
-    $zip->addFromString($name.".c", $c_data);
-    $zip->addFromString($name.".h", $h_data);
-
-    $zip->close();*/
-
     global $builtin;
-    if(!$builtin) sleep(2);
     
     $file_name = $name.'.c';
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
 
     header('Content-Type: application/text');
     header('Content-disposition: attachment; filename='.$file_name);
@@ -403,50 +385,5 @@ function download($name, $c_data, $h_data)
     
 }
 
-function mail_attachment($filename,  $mailto, $from_mail, $from_name, $replyto, $subject, $body) {
-   
-     global $c_src; 
-     
-     $content = chunk_split(base64_encode($content));
-     $uid = md5(uniqid(time()));
-     
-
-    $eol = PHP_EOL;
-
-    // Basic headers
-    $header = "From: ".$from_name." <".$from_mail.">".$eol;
-    $header .= "Reply-To: ".$replyto.$eol;
-    $header .= "MIME-Version: 1.0\r\n";
-    $header .= "Content-Type: multipart/mixed; boundary=\"".$uid."\"";
-
-    // Put everything else in $message
-    $message = "--".$uid.$eol;
-    $message .= "Content-Type: text/html; charset=ISO-8859-1".$eol;
-    $message .= "Content-Transfer-Encoding: 8bit".$eol.$eol;
-    $message .= $body.$eol;
-    
-    $message .= "--".$uid.$eol;
-    $message .= "Content-Type: application/octet-stream; name=\"".$filename."\"".$eol;
-    $message .= "Content-Transfer-Encoding: base64".$eol;
-    $message .= "Content-Disposition: attachment; filename=\"".$filename."\"".$eol;
-    $message .= $c_src.$eol;
-
-/*
-    $message .= "--".$uid.$eol;
-    $message .= "Content-Type: application/octet-stream; name=\"".$filename."\"".$eol;
-    $message .= "Content-Transfer-Encoding: base64".$eol;
-    $message .= "Content-Disposition: attachment; filename=\"".  "other_" . $filename ."\"".$eol;
-    $message .= $c_src.$eol;
-*/
-
-
-    $message .= "--".$uid."--";
-
-     if (mail($mailto, $subject, $message, $header)) {
-        echo "mail send ... OK"; // or use booleans here
-     } else {
-        echo "mail send ... ERROR! " . error_get_last()['message'] ;
-     }
-}
 ?>
 
