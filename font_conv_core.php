@@ -1,0 +1,452 @@
+<?php
+putenv('GDFONTPATH=' . realpath('.'));
+
+$font_file = $_FILES["font_file"]["tmp_name"];
+$font_name = $_FILES["font_file"]["name"];
+$output_name = $_POST["name"];
+$h_px = $_POST["height"];
+$h_pt = $h_px  * 3;//3 / 4;
+$bpp = $_POST['bpp'];  
+$builtin = $_POST["built_in"];
+$canvas_w = 100;//5 * $h_pt;
+$c_src = "";
+$c_glyph_bitmap = "";
+$c_glyph_dsc = "";
+$c_unicode_list = "";
+$c_font_dsc = "";
+$c_info = "";
+$unicode_start = $_POST["uni_first"];
+$unicode_last = $_POST["uni_last"];
+$unicode_list = $_POST["list"];
+$unicode_start_str = "U+" . str_pad(dechex($unicode_start), 4, '0', STR_PAD_LEFT);
+$unicode_last_str = "U+" . str_pad(dechex($unicode_last), 4, '0', STR_PAD_LEFT);;
+$unicode_start_letter = utf8($unicode_start);
+$unicode_last_letter = utf8($unicode_last);
+
+$byte_cnt = 0;
+$base_line_ofs = 0;
+height_corr();
+
+
+if($builtin) {
+    $c_src = "
+#include \"../lv_font.h\"\n";
+
+    $c_src .= "\n#if USE_". strtoupper($output_name) . " != 0\t/*Can be enabled in lv_conf.h*/\n\n";
+    
+
+} else {
+$c_src = "
+#include \"lvgl/lv_misc/lv_font.h\"\n\n";
+}
+
+$c_info = "/***********************************************************************************
+ * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with $bpp bpp";
+
+if(strlen($unicode_list) != 0) {
+    //echo(strlen($unicode_list) . " ");
+    $unicode_list = html_entity_decode($unicode_list, ENT_COMPAT | ENT_HTML401, ini_get("default_charset"));
+    //echo(strlen($unicode_list));
+	$list_rep = str_replace("\\", "\\\\", $unicode_list);
+	$list_rep = str_replace('$', '\\$', $unicode_list);
+	$list_rep = str_replace('\'', '\\\'', $unicode_list);
+	$c_info .= "\n * Sparse font with only these characters: " . $list_rep;
+
+	$c_unicode_list  = "/*List of unicode characters*/
+static const uint32_t $output_name". "_unicode_list[] = {";
+
+	for($i = 0; $i < strlen($unicode_list); $i++) {
+		$letter = substr_utf8($unicode_list, $i, 1);
+		//echo($letter . "<br>");
+		$unicode_act = ord_utf8( $letter);
+		if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
+	
+		$unicode_str = str_pad(dechex($unicode_act), 4, '0', STR_PAD_LEFT);
+		$c_unicode_list .= "\n  $unicode_act,\t/*Unicode: U+$unicode_str ($letter)*/"; 
+	}
+
+	$c_unicode_list .= "\n  0,    /*End indicator*/\n};";
+}
+ 
+$c_info .= "\n***********************************************************************************/\n";
+
+$c_src .= $c_info; 
+
+$c_glyph_bitmap = "
+/*Store the image of the letters (glyph)*/
+static const uint8_t $output_name"."_glyph_bitmap[] = 
+{\n";
+
+$c_glyph_dsc = "
+/*Store the glyph descriptions*/
+static const lv_font_glyph_dsc_t $output_name" . "_glyph_dsc[] = 
+{\n";
+
+$c_font_dsc = "lv_font_t $output_name = 
+{    
+    .unicode_first = $unicode_start".",\t/*First Unicode letter in this font*/
+    .unicode_last = $unicode_last".",\t/*Last Unicode letter in this font*/
+    .h_px = $h_px".",\t\t\t\t/*Font height in pixels*/
+    .glyph_bitmap = $output_name"."_glyph_bitmap,\t/*Bitmap of glyphs*/
+    .glyph_dsc = $output_name"."_glyph_dsc,\t\t/*Description of glyphs*/";
+if(strlen($unicode_list)) { $c_font_dsc .= "
+    .unicode_list = $output_name"."_unicode_list,\t/*List of unicode characters*/
+    .get_bitmap = lv_font_get_bitmap_sparse,\t/*Function pointer to get glyph's bitmap*/
+    .get_width = lv_font_get_width_sparse,\t/*Function pointer to get glyph's width*/\n";
+} else { $c_font_dsc .= "
+    .unicode_list = NULL,\t/*Every character in the font from 'unicode_first' to 'unicode_last'*/
+    .get_bitmap = lv_font_get_bitmap_continuous,\t/*Function pointer to get glyph's bitmap*/
+    .get_width = lv_font_get_width_continuous,\t/*Function pointer to get glyph's width*/\n";
+}
+
+if($builtin) {
+$c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
+    .bpp = 1,\t\t\t\t/*Bit per pixel*/
+ #elif USE_" . strtoupper($output_name) . " == 2
+    .bpp = 2,\t\t\t\t/*Bit per pixel*/
+ #elif USE_" . strtoupper($output_name) . " == 4
+    .bpp = 4,\t\t\t\t/*Bit per pixel*/
+ #elif USE_" . strtoupper($output_name) . " == 8
+    .bpp = 8,\t\t\t\t/*Bit per pixel*/
+#endif\n";
+} else {
+    $c_font_dsc .= "    .bpp = $bpp,\t\t\t\t/*Bit per pixel*/\n";
+}
+    $c_font_dsc .= "    .next_page = NULL,\t\t/*Pointer to a font extension*/
+};";
+
+
+// Create the image
+$im = imagecreatetruecolor($canvas_w, $h_px);
+
+if(!$builtin) {
+    convert_all_letters();
+} else {
+    $c_glyph_bitmap .= "#if USE_" . strtoupper($output_name) . " == 1\n";
+    $c_glyph_dsc .= "#if USE_" . strtoupper($output_name) . " == 1\n";
+    $bpp = 1;
+    $byte_cnt = 0;
+    convert_all_letters();
+    
+    $c_glyph_bitmap .= "\n#elif USE_" . strtoupper($output_name) . " == 2\n";
+    $c_glyph_dsc .= "\n#elif USE_" . strtoupper($output_name) . " == 2\n";
+    $bpp = 2;
+    $byte_cnt = 0;
+    convert_all_letters();
+    
+    $c_glyph_bitmap .= "\n#elif USE_" . strtoupper($output_name) . " == 4\n";
+    $c_glyph_dsc .= "\n#elif USE_" . strtoupper($output_name) . " == 4\n";
+    $bpp = 4;
+    $byte_cnt = 0;
+    convert_all_letters();
+    
+    $c_glyph_bitmap .= "\n#elif USE_" . strtoupper($output_name) . " == 8\n";
+    $c_glyph_dsc .= "\n#elif USE_" . strtoupper($output_name) . " == 8\n";
+    $bpp = 8;
+    $byte_cnt = 0;
+    convert_all_letters();
+    
+    $c_glyph_bitmap .= "\n#endif\n";
+    $c_glyph_dsc .= "\n#endif\n";
+    
+
+} 
+
+$c_glyph_bitmap .= "};";
+$c_glyph_dsc .= "};";
+$c_src .= $c_glyph_bitmap . "\n\n" . $c_glyph_dsc . "\n\n";
+if(strlen($c_unicode_list)) $c_src .= $c_unicode_list . "\n\n";
+$c_src .= $c_font_dsc;
+
+if($builtin) {
+    $c_src .= "\n\n#endif /*USE_". strtoupper($output_name) . "*/\n";
+}
+
+//mail_attachment("$output_name.c","kisvegabor@gmail.com", "font-converter@littelvgl.com",  "[LittelvGL] Font converter", "font-converter@littelvgl.com", "$font_file_name download", "<h2>Tessek egy ket jo font</h2> ez meg a body<br>ujsor");
+
+imagedestroy($im);
+
+download($output_name, $c_src, "alma header");
+
+
+function convert_all_letters()
+{
+    global $unicode_list;
+    global $unicode_start;
+    global $unicode_last;
+    global $font_file;
+    global $im;
+    global $canvas_w;
+    global $h_px;
+    global $h_pt;
+    global $bpp;
+    global $base_line_ofs;
+
+    // Create some colors
+    $white = imagecolorallocate($im, 255, 255, 255);
+    $black = imagecolorallocate($im, 0, 0, 0);
+
+    if(strlen($unicode_list) == 0) {
+        for($unicode_act = $unicode_start; $unicode_act <= $unicode_last; $unicode_act++) {
+	        imagefilledrectangle($im, 0, 0, $canvas_w, $h_px, $black);
+            $letter = utf8($unicode_act);
+            $co = imagettftext($im, $h_pt, 0, 0, $h_pt + $base_line_ofs, $white, $font_file, $letter);    //Size and Y in pt NOT px
+            $w_px = $co[1] - $co[0];
+            convert_letter($im, $unicode_act,  $w_px, $bpp);
+        }
+    } else {
+        for($i = 0; $i < strlen($unicode_list); $i++) {
+            $letter = substr_utf8($unicode_list, $i, 1);
+            //echo($letter . "<br>");
+        	$unicode_act = ord_utf8( $letter);
+            if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
+            
+            imagefilledrectangle($im, 0, 0, $canvas_w, $h_px, $black);
+            $co = imagettftext($im, $h_pt, 0, 0, $h_pt + $base_line_ofs, $white, $font_file, $letter);    //Size and Y in pt NOT px
+            //echo($letter . ": " .$co[7] . "  " . $co[1]. "<br>");
+            
+            $w_px = $co[1] - $co[0];
+            convert_letter($im, $unicode_act,  $w_px, $bpp);
+        }
+    }
+}
+
+function height_corr()
+{
+    global $h_pt;
+    global $h_px;
+    global $font_file;
+    global $base_line_ofs;
+    global $unicode_start;
+    global $unicode_last;
+    
+    //$h_pt = $h_px * 3 / 4;
+
+    $white = imagecolorallocate($im, 255, 255, 255);
+    $black = imagecolorallocate($im, 0, 0, 0);
+    $im = imagecreatetruecolor($h_pt * 1, $h_pt * 1);  /*The size is not important*/
+    $max_h = $h_px;// - floor($h_px/8);
+    $test_text = '| [§@#ß$ÄÁŰ¿?`\'"_pyj';
+
+    if($unicode_start >= 61440 && $unicode_last <= 62190) {
+        $test_text .= " ";
+        //echo("symbol<br>");
+    }
+
+    while($h_pt > 0) {
+        $co = imagettftext($im, $h_pt, 0, 0, $h_pt, $white, $font_file, $test_text );
+        
+        $h = $co[1] - $co[7];
+       // echo("h: $h <br>");
+        if($h > $max_h) $h_pt-=0.75;
+        else {
+            $base_line_ofs = - $co[7];
+            break;
+        }
+    }
+    
+    //echo("New height pt: " . $h_pt. "base line ofs: $base_line_ofs <br>");
+   /*
+    $h_pt = floor($h_pt/3) * 3;      
+    $co = imagettftext($im, $h_pt, 0, 0, $h_pt, $white, $font_file, $test_text );
+    
+    $h = $co[1] - $co[7];
+    $base_line_ofs = - $co[7]; */
+    //echo("New height pt mod: " . $h_pt. "base line ofs: $base_line_ofs <br>");
+}
+
+function utf8($num)
+{
+    if($num<=0x7F)       return chr($num);
+    if($num<=0x7FF)      return chr(($num>>6)+192).chr(($num&63)+128);
+    if($num<=0xFFFF)     return chr(($num>>12)+224).chr((($num>>6)&63)+128).chr(($num&63)+128);
+    if($num<=0x1FFFFF)   return chr(($num>>18)+240).chr((($num>>12)&63)+128).chr((($num>>6)&63)+128).chr(($num&63)+128);
+    return '';
+}
+
+function ord_utf8($s){
+    return (int) ($s=unpack('C*',$s[0].$s[1].$s[2].$s[3]))&&$s[1]<(1<<7)?$s[1]:
+    ($s[1]>239&&$s[2]>127&&$s[3]>127&&$s[4]>127?(7&$s[1])<<18|(63&$s[2])<<12|(63&$s[3])<<6|63&$s[4]:
+    ($s[1]>223&&$s[2]>127&&$s[3]>127?(15&$s[1])<<12|(63&$s[2])<<6|63&$s[3]:
+    ($s[1]>193&&$s[2]>127?(31&$s[1])<<6|63&$s[2]:0)));
+}
+
+function substr_utf8($str,$from,$len){
+    return preg_replace('#^(?:[\x00-\x7F]|[\xC0-\xFF][\x80-\xBF]+){0,'. $from .'}'.'((?:[\x00-\x7F]|[\xC0-\xFF][\x80-\xBF]+){0,'. $len .'}).*#s','$1', $str);
+}
+
+function convert_letter($glyph, $unicode,  $w, $bpp) {
+   global $h_px;
+   global $c_glyph_bitmap;
+   global $c_glyph_dsc;
+   global $byte_cnt;
+   $w = $h_px * 5; //assume bigger width to be sure
+   $whitespace = 0;	
+
+   //Decrement width to trim the the empty columns
+   for($x = $w; $x >= 0; $x--) {
+        $c = 0;
+        for($y = 0; $y < $h_px; $y++) {
+            $c = imagecolorat($glyph, $x, $y);
+            $c = $c & 0xFF;
+            if($c != 0x00) break;
+        }
+        
+        if($c != 0x00) break;
+        $w--;
+   }
+	
+	if($x < 0) {
+		$whitespace = 1;
+		$w = floor($h_px / 4);      /*Width of white space is 1/3 height*/
+	}
+	
+   //Trim leading empty columns
+   if(!$whitespace) {
+	   $x_start;
+	   for($x_start = 0; $x_start <= $w; $x_start++) {
+	        $c = 0;
+	        for($y = 0; $y < $h_px; $y++) {
+	            $c = imagecolorat($glyph, $x_start, $y);
+	            $c = $c & 0xFF;
+	            if($c != 0x00) break;
+	        }
+	        
+	        if($c != 0x00) break;
+	   }
+	   $w -= $x_start;
+	}
+
+   
+   $w++; //E.g. x1=5, x2=8 -> w=3+1
+   $letter = utf8($unicode);
+   $unicode_str = str_pad(dechex($unicode), 4, '0', STR_PAD_LEFT);
+   $c_glyph_bitmap .= "  /*Unicode: U+$unicode_str ($letter) , Width: $w */\n";
+
+   $comment = "";
+   $data = "";
+   $act_byte;
+    for($y = 0; $y < $h_px; $y++) {
+        $act_byte = 0;
+        $comment = "//";
+        $data = "  ";
+        for($x = 0; $x < $w; $x++) {
+            $act_byte = $act_byte << (1 * $bpp);
+            $c = imagecolorat($glyph, $x + $x_start, $y);
+            $c = $c & 0xFF;
+            $act_byte |= $c >> (8 - $bpp);
+            
+            if($c > 192) {
+                $comment .= "@";
+            } else if($c > 128) {
+                $comment .= "%";
+            } else if($c > 64) {
+                $comment .= "+";
+            } else {
+                $comment .= ".";
+            }
+            
+            if(((($x + 1) * $bpp) % 8) == 0 && ($x != 0 || $bpp == 8)) {
+                $hex = str_pad(dechex($act_byte), 2, '0', STR_PAD_LEFT);
+                $data .= "0x" . $hex . ", ";     
+                $act_byte = 0;
+            } 
+        }
+    
+        /*Flush the remaining part*/    
+        if(($x * $bpp) % 8 != 0) {
+            /*Shift bit to the left most position*/
+            $act_byte  = $act_byte << (((8 - ($x * $bpp) % 8)));
+            $hex = str_pad(dechex($act_byte), 2, '0', STR_PAD_LEFT);
+            $data .= "0x" . $hex . ", ";     
+            $act_byte = 0;
+            
+        }
+        
+        $c_glyph_bitmap .= "$data $comment \n";
+    }
+    
+    $size = $h_px * floor($w * $bpp / 8);
+    if(($w * $bpp) % 8) $size += $h_px;     //Extra byte to store the reminder
+    
+    $c_glyph_dsc .= "  {.w_px = $w,\t.glyph_index = $byte_cnt},\t/*Unicode: U+$unicode_str ($letter)*/\n";
+    $c_glyph_bitmap .= "\n\n";
+    $byte_cnt += $size;
+}
+
+
+function download($name, $c_data, $h_data)
+{
+/*
+    $zipname = $name.'.zip';
+    $zip = new ZipArchive;
+    $zip->open($zipname, ZipArchive::CREATE);
+
+    $zip->addFromString($name.".c", $c_data);
+    $zip->addFromString($name.".h", $h_data);
+
+    $zip->close();*/
+
+    global $builtin;
+    if(!$builtin) sleep(2);
+    
+    $file_name = $name.'.c';
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+
+    header('Content-Type: application/text');
+    header('Content-disposition: attachment; filename='.$file_name);
+    header('Content-Length: ' . strlen($c_data));
+    echo($c_data);
+    
+    
+}
+
+function mail_attachment($filename,  $mailto, $from_mail, $from_name, $replyto, $subject, $body) {
+   
+     global $c_src; 
+     
+     $content = chunk_split(base64_encode($content));
+     $uid = md5(uniqid(time()));
+     
+
+    $eol = PHP_EOL;
+
+    // Basic headers
+    $header = "From: ".$from_name." <".$from_mail.">".$eol;
+    $header .= "Reply-To: ".$replyto.$eol;
+    $header .= "MIME-Version: 1.0\r\n";
+    $header .= "Content-Type: multipart/mixed; boundary=\"".$uid."\"";
+
+    // Put everything else in $message
+    $message = "--".$uid.$eol;
+    $message .= "Content-Type: text/html; charset=ISO-8859-1".$eol;
+    $message .= "Content-Transfer-Encoding: 8bit".$eol.$eol;
+    $message .= $body.$eol;
+    
+    $message .= "--".$uid.$eol;
+    $message .= "Content-Type: application/octet-stream; name=\"".$filename."\"".$eol;
+    $message .= "Content-Transfer-Encoding: base64".$eol;
+    $message .= "Content-Disposition: attachment; filename=\"".$filename."\"".$eol;
+    $message .= $c_src.$eol;
+
+/*
+    $message .= "--".$uid.$eol;
+    $message .= "Content-Type: application/octet-stream; name=\"".$filename."\"".$eol;
+    $message .= "Content-Transfer-Encoding: base64".$eol;
+    $message .= "Content-Disposition: attachment; filename=\"".  "other_" . $filename ."\"".$eol;
+    $message .= $c_src.$eol;
+*/
+
+
+    $message .= "--".$uid."--";
+
+     if (mail($mailto, $subject, $message, $header)) {
+        echo "mail send ... OK"; // or use booleans here
+     } else {
+        echo "mail send ... ERROR! " . error_get_last()['message'] ;
+     }
+}
+?>
+
