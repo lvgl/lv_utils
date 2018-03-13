@@ -1,9 +1,52 @@
 <?php
+$offline = 0;
+if (!isset($_SERVER["HTTP_HOST"])) {
+  parse_str($argv[1], $_POST);
+  $offline = 1;
+}
 
-$img_file = $_FILES["img_file"]["tmp_name"];
-$output_name = $_POST["name"];
-$transp = $_POST["transp"];
-$format = $_POST["format"];
+if($offline == 0) {
+
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+
+
+    $img_file = $_FILES["img_file"]["tmp_name"];
+    $img_file_name = $_FILES["img_file"]["name"];
+    $output_name = $_POST["name"];
+    $transp = $_POST["transp"];
+    $format = $_POST["format"];
+} 
+else {
+    if(isset($_POST["name"])) {
+        $output_name = $_POST["name"];
+    } else {
+        echo("Mising Name\n");
+        exit(0);
+    }
+     
+    if(isset($_POST["img"])) {
+        $img_file = $_POST["img"];
+        $img_file_name = $_POST["img"];
+    } else {
+        echo("Mising image file\n");
+        exit(0);
+    }
+    
+    if(isset($_POST["format"])) {
+        $format = $_POST["format"];
+    } else {
+        $format = "c_array";
+    }
+    
+    if(isset($_POST["transp"])) {
+        $transp = $_POST["transp"];
+    } else {
+        $transp = "none";
+    }
+    
+}
 
 $w = 0;
 $h = 0;
@@ -12,7 +55,7 @@ $w = $size[0];
 $h = $size[1];
 
 
-$ext = pathinfo($_FILES["img_file"]["name"], PATHINFO_EXTENSION);
+$ext = pathinfo($img_file_name, PATHINFO_EXTENSION);
 if($ext == "png") $img = imagecreatefrompng($img_file);
 else if($ext == "bmp") $img = imagecreatefrombmp($img_file);
 else if($ext == "jpg") $img = imagecreatefromjpeg($img_file);
@@ -31,6 +74,7 @@ function conv_c_src()
     global $output_name;
     global $img;
     global $transp;
+    global $c_src;
 
     $c_src .= "#include <stdint.h>
 #include \"lv_conf.h\"
@@ -114,7 +158,6 @@ const lv_img_t $output_name = {
     $c_src .= "  .pixel_map = " . $output_name . "_pixel_map\t/*Pointer the array of image pixels.*/
 };\n\n";
     
-    $output_name .= ".c";
     download($output_name, $c_src);
     
 }
@@ -181,16 +224,20 @@ function conv_bin_rgb()
 
 function download($name, $content)
 {
-    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-    header("Cache-Control: post-check=0, pre-check=0", false);
-    header("Pragma: no-cache");
+    global $offline;
+    
+    $file_name = $name.'.c';
 
-    header('Content-Type: application/text');
-    header('Content-disposition: attachment; filename='.$name);
-    header('Content-Length: ' . strlen($content));
-    echo($content);
-    
-    
+    if($offline) {
+        $file = fopen($file_name, "w");
+        fwrite($file, $content);
+        fclose($file);
+    } else {
+        header('Content-Type: application/text');
+        header('Content-disposition: attachment; filename='.$file_name);
+        header('Content-Length: ' . strlen($content));
+        echo($content);
+    } 
 }
 
 ?>

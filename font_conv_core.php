@@ -1,19 +1,89 @@
 <?php
 
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Cache-Control: post-check=0, pre-check=0", false);
-header("Pragma: no-cache");
 
+$offline = 0;
+if (!isset($_SERVER["HTTP_HOST"])) {
+  parse_str($argv[1], $_POST);
+  $offline = 1;
+}
 
 putenv('GDFONTPATH=' . realpath('.'));
+    
+if($offline == 0) {
 
-$font_file = $_FILES["font_file"]["tmp_name"];
-$font_name = $_FILES["font_file"]["name"];
-$output_name = $_POST["name"];
-$h_px = $_POST["height"];
+    header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+    header("Cache-Control: post-check=0, pre-check=0", false);
+    header("Pragma: no-cache");
+
+    $font_file = $_FILES["font_file"]["tmp_name"];
+    $font_name = $_FILES["font_file"]["name"];
+    $output_name = $_POST["name"];
+    $h_px = $_POST["height"];
+    $bpp = $_POST['bpp'];  
+    $unicode_start = $_POST["uni_first"];
+    $unicode_last = $_POST["uni_last"];
+    $unicode_list = $_POST["list"];
+    $builtin = $_POST["built_in"];
+} else {
+    if(isset($_POST["name"])) {
+        $output_name = $_POST["name"];
+    } else {
+        echo("Mising Name\n");
+        exit(0);
+    }
+ 
+    if(isset($_POST["height"])) {
+        $h_px = $_POST["height"];
+    } else {
+        echo("Mising Height\n");
+        exit(0);
+    }
+    
+    if(isset($_POST["bpp"])) {
+        $bpp = $_POST["bpp"];
+    } else {
+        echo("Mising Bpp\n");
+        exit(0);
+    }
+    
+    if(isset($_POST["font"])) {
+        $font_file = $_POST["font"];
+        $font_name = $_POST["font"];
+    } else {
+        echo("Mising Font\n");
+        exit(0);
+    }
+    
+    if(isset($_POST["uni_first"])) {
+    $unicode_start = $_POST["uni_first"];
+    } else {
+        echo("Mising First unicode\n");
+        exit(0);
+    }
+    
+    if(isset($_POST["uni_last"])) {
+     $unicode_last = $_POST["uni_last"];
+    } else {
+        echo("Mising Last unicode\n");
+        exit(0);
+    }
+    
+    
+    if(isset($_POST["list"])) {
+        $unicode_list = $_POST["list"];
+    } else {
+        $unicode_list = "";
+    }
+    
+    
+    if(isset($_POST["built_in"])) {
+        $builtin = $_POST["built_in"];
+    } else {
+        $builtin = 0;
+    }
+}
+
 $h_pt = $h_px  * 3;
-$bpp = $_POST['bpp'];  
-$builtin = $_POST["built_in"];
 $canvas_w = 5 * $h_px;
 $c_src = "";
 $c_glyph_bitmap = "";
@@ -21,9 +91,6 @@ $c_glyph_dsc = "";
 $c_unicode_list = "";
 $c_font_dsc = "";
 $c_info = "";
-$unicode_start = $_POST["uni_first"];
-$unicode_last = $_POST["uni_last"];
-$unicode_list = $_POST["list"];
 $unicode_start_str = "U+" . str_pad(dechex($unicode_start), 4, '0', STR_PAD_LEFT);
 $unicode_last_str = "U+" . str_pad(dechex($unicode_last), 4, '0', STR_PAD_LEFT);;
 $unicode_start_letter = utf8($unicode_start);
@@ -39,19 +106,23 @@ if($builtin) {
 #include \"../lv_font.h\"\n";
 
     $c_src .= "\n#if USE_". strtoupper($output_name) . " != 0\t/*Can be enabled in lv_conf.h*/\n\n";
+
+$c_info = "/***********************************************************************************
+ * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with all bpp";
     
 
 } else {
 $c_src = "
 #include \"lvgl/lv_misc/lv_font.h\"\n\n";
-}
 
 $c_info = "/***********************************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with $bpp bpp";
 
+}
+
+
 if(strlen($unicode_list) != 0) {
     $unicode_list = html_entity_decode($unicode_list, ENT_COMPAT | ENT_HTML401, ini_get("default_charset"));
-    //echo(strlen($unicode_list));
 	$list_rep = str_replace("\\", "\\\\", $unicode_list);
 	$list_rep = str_replace('$', '\\$', $unicode_list);
 	$list_rep = str_replace('\'', '\\\'', $unicode_list);
@@ -62,7 +133,6 @@ static const uint32_t $output_name". "_unicode_list[] = {";
 
 	for($i = 0; $i < strlen($unicode_list); $i++) {
 		$letter = substr_utf8($unicode_list, $i, 1);
-		//echo($letter . "<br>");
 		$unicode_act = ord_utf8( $letter);
 		if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
 	
@@ -124,6 +194,9 @@ $c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
 // Create the image
 $im = imagecreatetruecolor($canvas_w, $h_px);
 
+// Create some colors
+$white = imagecolorallocate($im, 255, 255, 255);
+$black = imagecolorallocate($im, 0, 0, 0);
 
 if(!$builtin) {
     convert_all_letters();
@@ -179,16 +252,14 @@ function convert_all_letters()
     global $unicode_start;
     global $unicode_last;
     global $font_file;
-    global $im;
     global $canvas_w;
     global $h_px;
     global $h_pt;
     global $bpp;
     global $base_line_ofs;
-
-    // Create some colors
-    $white = imagecolorallocate($im, 255, 255, 255);
-    $black = imagecolorallocate($im, 0, 0, 0);
+    global $im;
+    global $black;
+    global $white;
 
 
     if(strlen($unicode_list) == 0) {
@@ -224,13 +295,11 @@ function height_corr()
     global $base_line_ofs;
     global $unicode_start;
     global $unicode_last;
-    
-    //$h_pt = $h_px * 3 / 4;
-
+   
+    $im = imagecreatetruecolor($h_pt * 1, $h_pt * 1);  /*The size is not important*/
     $white = imagecolorallocate($im, 255, 255, 255);
     $black = imagecolorallocate($im, 0, 0, 0);
-    $im = imagecreatetruecolor($h_pt * 1, $h_pt * 1);  /*The size is not important*/
-    $max_h = $h_px;// - floor($h_px/8);
+    $max_h = $h_px;
     $test_text = '| [§@#ß$ÄÁŰ¿?`\'"_pyj';
 
     if($unicode_start >= 61440 && $unicode_last <= 62190) {
@@ -249,6 +318,8 @@ function height_corr()
             break;
         }
     }
+    
+    imagedestroy($im);
 }
 
 function utf8($num)
@@ -261,7 +332,14 @@ function utf8($num)
 }
 
 function ord_utf8($s){
-    return (int) ($s=unpack('C*',$s[0].$s[1].$s[2].$s[3]))&&$s[1]<(1<<7)?$s[1]:
+    $len = strlen($s);
+    if($len == 0) return 0;
+    if($len == 1) $s = unpack('C*',$s[0]."0"."0"."0");
+    else if($len == 2) $s = unpack('C*',$s[0].$s[1]."0"."0");
+    else if($len == 3) $s = unpack('C*',$s[0].$s[1].$s[2]."0");
+    else if($len == 4) $s = unpack('C*',$s[0].$s[1].$s[2].$s[3]);
+    
+    return (int)$s[1]<(1<<7)?$s[1]:
     ($s[1]>239&&$s[2]>127&&$s[3]>127&&$s[4]>127?(7&$s[1])<<18|(63&$s[2])<<12|(63&$s[3])<<6|63&$s[4]:
     ($s[1]>223&&$s[2]>127&&$s[3]>127?(15&$s[1])<<12|(63&$s[2])<<6|63&$s[3]:
     ($s[1]>193&&$s[2]>127?(31&$s[1])<<6|63&$s[2]:0)));
@@ -276,7 +354,7 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
    global $c_glyph_bitmap;
    global $c_glyph_dsc;
    global $byte_cnt;
-   $w = $h_px * 5; //assume bigger width to be sure
+   $w = $h_px * 5 - 1; //assume bigger width to be sure
    $whitespace = 0;	
 
    //Decrement width to trim the the empty columns
@@ -298,8 +376,8 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
 	}
 	
    //Trim leading empty columns
+   $x_start = 0;
    if(!$whitespace) {
-	   $x_start;
 	   for($x_start = 0; $x_start <= $w; $x_start++) {
 	        $c = 0;
 	        for($y = 0; $y < $h_px; $y++) {
@@ -373,16 +451,21 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
 
 function download($name, $c_data)
 {
-    global $builtin;
+    global $offline;
     
     $file_name = $name.'.c';
 
-    header('Content-Type: application/text');
-    header('Content-disposition: attachment; filename='.$file_name);
-    header('Content-Length: ' . strlen($c_data));
-    echo($c_data);
-    
-    
+
+    if($offline) {
+        $file = fopen($file_name, "w");
+        fwrite($file, $c_data);
+        fclose($file);
+    } else {
+        header('Content-Type: application/text');
+        header('Content-disposition: attachment; filename='.$file_name);
+        header('Content-Length: ' . strlen($c_data));
+        echo($c_data);
+    }
 }
 
 ?>
