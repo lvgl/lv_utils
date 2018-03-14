@@ -409,12 +409,13 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
             $c = imagecolorat($glyph, $x + $x_start, $y);
             $c = $c & 0xFF;
             $act_byte |= $c >> (8 - $bpp);
+            $c = ($c >> (8 - $bpp)) << (8 - $bpp);
             
-            if($c > 192) {
+            if($c >= 192) {
                 $comment .= "@";
-            } else if($c > 128) {
+            } else if($c >= 128) {
                 $comment .= "%";
-            } else if($c > 64) {
+            } else if($c >= 64) {
                 $comment .= "+";
             } else {
                 $comment .= ".";
