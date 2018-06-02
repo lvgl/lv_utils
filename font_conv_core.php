@@ -1,6 +1,5 @@
 <?php
 
-
 $offline = 0;
 if (!isset($_SERVER["HTTP_HOST"])) {
   parse_str($argv[1], $_POST);
@@ -132,7 +131,7 @@ if(strlen($unicode_list) != 0) {
 static const uint32_t $output_name". "_unicode_list[] = {";
 
 	for($i = 0; $i < strlen($unicode_list); $i++) {
-		$letter = substr_utf8($unicode_list, $i, 1);
+		$letter = mb_substr($unicode_list, $i, 1);
 		$unicode_act = ord_utf8( $letter);
 		if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
 	
@@ -271,12 +270,18 @@ function convert_all_letters()
             convert_letter($im, $unicode_act,  $w_px, $bpp);
         }
     } else {
-        for($i = 0; $i < strlen($unicode_list); $i++) {
-            $letter = substr_utf8($unicode_list, $i, 1);
+    $run_cnt = 0;
+        $list_len = mb_strlen($unicode_list);
+        for($i = 0; $i < $list_len; $i++) {
+            $letter = mb_substr($unicode_list, $i, 1);
+            $letter_len = strlen($letter);
+            
+            
             //echo($letter . "<br>");
         	$unicode_act = ord_utf8( $letter);
+            $run_cnt_pre ++;
             if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
-            
+            $run_cnt_post ++;       
             imagefilledrectangle($im, 0, 0, $canvas_w, $h_px, $black);
             $co = imagettftext($im, $h_pt, 0, 0, $h_pt + $base_line_ofs, $white, $font_file, $letter);    //Size and Y in pt NOT px
             //echo($letter . ": " .$co[7] . "  " . $co[1]. "<br>");
@@ -345,10 +350,6 @@ function ord_utf8($s){
     ($s[1]>193&&$s[2]>127?(31&$s[1])<<6|63&$s[2]:0)));
 }
 
-function substr_utf8($str,$from,$len){
-    return preg_replace('#^(?:[\x00-\x7F]|[\xC0-\xFF][\x80-\xBF]+){0,'. $from .'}'.'((?:[\x00-\x7F]|[\xC0-\xFF][\x80-\xBF]+){0,'. $len .'}).*#s','$1', $str);
-}
-
 function convert_letter($glyph, $unicode,  $w, $bpp) {
    global $h_px;
    global $c_glyph_bitmap;
@@ -409,13 +410,12 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
             $c = imagecolorat($glyph, $x + $x_start, $y);
             $c = $c & 0xFF;
             $act_byte |= $c >> (8 - $bpp);
-            $c = ($c >> (8 - $bpp)) << (8 - $bpp);
             
-            if($c >= 192) {
+            if($c > 192) {
                 $comment .= "@";
-            } else if($c >= 128) {
+            } else if($c > 128) {
                 $comment .= "%";
-            } else if($c >= 64) {
+            } else if($c > 64) {
                 $comment .= "+";
             } else {
                 $comment .= ".";
