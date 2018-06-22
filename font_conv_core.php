@@ -23,6 +23,9 @@ if($offline == 0) {
     $unicode_last = $_POST["uni_last"];
     $unicode_list = $_POST["list"];
     $builtin = $_POST["built_in"];
+    $monospace = $_POST["monospace"];
+    $scale = $_POST["scale"];
+    $base_shift = $_POST["base_shift"];
 } else {
     if(isset($_POST["name"])) {
         $output_name = $_POST["name"];
@@ -80,6 +83,24 @@ if($offline == 0) {
     } else {
         $builtin = 0;
     }
+    
+    if(isset($_POST["monospace"])) {
+        $monospace = $_POST["monospace"];
+    } else {
+        $monospace = 0;
+    }
+    
+    if(isset($_POST["scale"])) {
+        $scale = $_POST["scale"];
+    } else {
+        $scale = 0;
+    }
+    
+    if(isset($_POST["base_shift"])) {
+        $base_shift = $_POST["base_shift"];
+    } else {
+        $base_shift = 0;
+    }
 }
 
 $h_pt = $h_px  * 3;
@@ -98,7 +119,11 @@ $unicode_last_letter = utf8($unicode_last);
 $byte_cnt = 0;
 $base_line_ofs = 0;
 height_corr();
-
+$base_line_ofs -= $base_shift;
+if($scale <= 0) $scale = 100;
+$h_pt = $h_pt * $scale / 100;
+$h_pt = floor($h_pt/0.75);   /*Be sure h_pt is dividabe with 0.75*/ 
+$h_pt = $h_pt * 0.75;
 
 if($builtin) {
     $c_src = "
@@ -355,6 +380,7 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
    global $c_glyph_bitmap;
    global $c_glyph_dsc;
    global $byte_cnt;
+   global $monospace;
    $w = $h_px * 5 - 1; //assume bigger width to be sure
    $whitespace = 0;	
 
@@ -377,19 +403,19 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
 	}
 	
    //Trim leading empty columns
-   $x_start = 0;
+   $first_col = 0;
    if(!$whitespace) {
-	   for($x_start = 0; $x_start <= $w; $x_start++) {
+	   for($first_col = 0; $first_col <= $w; $first_col++) {
 	        $c = 0;
 	        for($y = 0; $y < $h_px; $y++) {
-	            $c = imagecolorat($glyph, $x_start, $y);
+	            $c = imagecolorat($glyph, $first_col, $y);
 	            $c = $c & 0xFF;
 	            if($c != 0x00) break;
 	        }
 	        
 	        if($c != 0x00) break;
 	   }
-	   $w -= $x_start;
+	   $w -= $first_col;
 	}
 
    
@@ -398,6 +424,19 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
    $unicode_str = str_pad(dechex($unicode), 4, '0', STR_PAD_LEFT);
    $c_glyph_bitmap .= "  /*Unicode: U+$unicode_str ($letter) , Width: $w */\n";
 
+
+    if($monospace <= 0) {
+        $x_start = 0;
+        $x_end = $w;
+        $x_mono_ofs = 0;        /*Offset because of monospace*/
+    } else {
+        $x_start = 0;
+        $x_end = $monospace;
+        $x_mono_ofs = floor(($monospace - $w)/2);        /*Offset because of monospace*/
+    }
+    
+  #  echo("xs $x_start xend $x_end <br><br><br>");
+
    $comment = "";
    $data = "";
    $act_byte;
@@ -405,21 +444,30 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
         $act_byte = 0;
         $comment = "//";
         $data = "  ";
-        for($x = 0; $x < $w; $x++) {
+        
+        for($x = $x_start; $x < $x_end; $x++) {
             $act_byte = $act_byte << (1 * $bpp);
-            $c = imagecolorat($glyph, $x + $x_start, $y);
+            $x_act = $x + $first_col - $x_mono_ofs;
+            if($x_act >= 0) {
+                $c = imagecolorat($glyph, $x_act , $y);
+            } else {
+                $c = 0x00;
+            }
             $c = $c & 0xFF;
             $act_byte |= $c >> (8 - $bpp);
+    
+           $c = ($c >> (8 - $bpp)) << (8 - $bpp);       /*Round based on bpp*/
             
-            if($c > 192) {
+            if($c >= 192) {
                 $comment .= "@";
-            } else if($c > 128) {
+            } else if($c >= 128) {
                 $comment .= "%";
-            } else if($c > 64) {
+            } else if($c >= 64) {
                 $comment .= "+";
             } else {
                 $comment .= ".";
             }
+
             
             if(((($x + 1) * $bpp) % 8) == 0 && ($x != 0 || $bpp == 8)) {
                 $hex = str_pad(dechex($act_byte), 2, '0', STR_PAD_LEFT);
