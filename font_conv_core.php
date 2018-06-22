@@ -23,9 +23,17 @@ if($offline == 0) {
     $unicode_last = $_POST["uni_last"];
     $unicode_list = $_POST["list"];
     $builtin = $_POST["built_in"];
-    $monospace = $_POST["monospace"];
-    $scale = $_POST["scale"];
-    $base_shift = $_POST["base_shift"];
+    
+    if(!empty($_POST["monospace"])) $monospace = $_POST["monospace"];
+    else $monospace = 0;
+    
+    if(!empty($_POST["scale"])) $scale = $_POST["scale"];
+    else $scale = 100;
+    
+    if(!empty($_POST["base_shift"])) $base_shift = $_POST["base_shift"];
+    else $base_shift = 0;
+    
+    
 } else {
     if(isset($_POST["name"])) {
         $output_name = $_POST["name"];
@@ -93,7 +101,7 @@ if($offline == 0) {
     if(isset($_POST["scale"])) {
         $scale = $_POST["scale"];
     } else {
-        $scale = 0;
+        $scale = 100;
     }
     
     if(isset($_POST["base_shift"])) {
@@ -211,6 +219,7 @@ $c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
 } else {
     $c_font_dsc .= "    .bpp = $bpp,\t\t\t\t/*Bit per pixel*/\n";
 }
+    $c_font_dsc .= "    .monospace = $monospace,\t\t/*Fix width (0: if not used)*/\n";
     $c_font_dsc .= "    .next_page = NULL,\t\t/*Pointer to a font extension*/
 };";
 
@@ -380,7 +389,6 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
    global $c_glyph_bitmap;
    global $c_glyph_dsc;
    global $byte_cnt;
-   global $monospace;
    $w = $h_px * 5 - 1; //assume bigger width to be sure
    $whitespace = 0;	
 
@@ -424,19 +432,6 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
    $unicode_str = str_pad(dechex($unicode), 4, '0', STR_PAD_LEFT);
    $c_glyph_bitmap .= "  /*Unicode: U+$unicode_str ($letter) , Width: $w */\n";
 
-
-    if($monospace <= 0) {
-        $x_start = 0;
-        $x_end = $w;
-        $x_mono_ofs = 0;        /*Offset because of monospace*/
-    } else {
-        $x_start = 0;
-        $x_end = $monospace;
-        $x_mono_ofs = floor(($monospace - $w)/2);        /*Offset because of monospace*/
-    }
-    
-  #  echo("xs $x_start xend $x_end <br><br><br>");
-
    $comment = "";
    $data = "";
    $act_byte;
@@ -445,7 +440,7 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
         $comment = "//";
         $data = "  ";
         
-        for($x = $x_start; $x < $x_end; $x++) {
+        for($x = 0; $x < $w; $x++) {
             $act_byte = $act_byte << (1 * $bpp);
             $x_act = $x + $first_col - $x_mono_ofs;
             if($x_act >= 0) {
