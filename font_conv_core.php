@@ -219,7 +219,9 @@ $c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
 } else {
     $c_font_dsc .= "    .bpp = $bpp,\t\t\t\t/*Bit per pixel*/\n";
 }
+if($monospace) {
     $c_font_dsc .= "    .monospace = $monospace,\t\t/*Fix width (0: if not used)*/\n";
+    }
     $c_font_dsc .= "    .next_page = NULL,\t\t/*Pointer to a font extension*/
 };";
 
