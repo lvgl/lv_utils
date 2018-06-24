@@ -21,7 +21,7 @@ if($offline == 0) {
     $bpp = $_POST['bpp'];  
     $unicode_start = $_POST["uni_first"];
     $unicode_last = $_POST["uni_last"];
-    $unicode_list = $_POST["list"];
+    $utf8_list = $_POST["list"];
     $builtin = $_POST["built_in"];
     
     if(!empty($_POST["monospace"])) $monospace = $_POST["monospace"];
@@ -80,9 +80,9 @@ if($offline == 0) {
     
     
     if(isset($_POST["list"])) {
-        $unicode_list = $_POST["list"];
+        $utf8_list = $_POST["list"];
     } else {
-        $unicode_list = "";
+        $utf8_list = "";
     }
     
     
@@ -116,7 +116,7 @@ $canvas_w = 5 * $h_px;
 $c_src = "";
 $c_glyph_bitmap = "";
 $c_glyph_dsc = "";
-$c_unicode_list = "";
+$c_utf8_list = "";
 $c_font_dsc = "";
 $c_info = "";
 $unicode_start_str = "U+" . str_pad(dechex($unicode_start), 4, '0', STR_PAD_LEFT);
@@ -152,27 +152,42 @@ $c_info = "/********************************************************************
 
 }
 
+$utf8_array = array();
+$unicode_array = array();
 
-if(strlen($unicode_list) != 0) {
-    $unicode_list = html_entity_decode($unicode_list, ENT_COMPAT | ENT_HTML401, ini_get("default_charset"));
-	$list_rep = str_replace("\\", "\\\\", $unicode_list);
-	$list_rep = str_replace('$', '\\$', $unicode_list);
-	$list_rep = str_replace('\'', '\\\'', $unicode_list);
-	$c_info .= "\n * Sparse font with only these characters: " . $list_rep;
+if(strlen($utf8_list) != 0) {
+    $utf8_list = html_entity_decode($utf8_list, ENT_COMPAT | ENT_HTML401, ini_get("default_charset"));
+	$list_rep = str_replace("\\", "\\\\", $utf8_list);
+	$list_rep = str_replace('$', '\\$', $utf8_list);
+	$list_rep = str_replace('\'', '\\\'', $utf8_list);
+	$c_info .= "\n * Sparse font with only these characters: ";
 
-	$c_unicode_list  = "/*List of unicode characters*/
-static const uint32_t $output_name". "_unicode_list[] = {";
-
-	for($i = 0; $i < strlen($unicode_list); $i++) {
-		$letter = mb_substr($unicode_list, $i, 1);
+    /*Order the list*/
+    for($i = 0; $i < mb_strlen($utf8_list); $i++) {
+		$letter = mb_substr($utf8_list, $i, 1);
 		$unicode_act = ord_utf8( $letter);
-		if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
-	
-		$unicode_str = str_pad(dechex($unicode_act), 4, '0', STR_PAD_LEFT);
-		$c_unicode_list .= "\n  $unicode_act,\t/*Unicode: U+$unicode_str ($letter)*/"; 
+        if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
+		$unicode_array[$i] = $unicode_act;
+    }
+    
+    sort($unicode_array, SORT_NUMERIC);
+    
+    for ($i = 0; $i < count($unicode_array); $i++) {
+        $utf8_array[$i] = utf8($unicode_array[$i]);
+        $c_info .= $utf8_array[$i];
+    }
+    
+
+	$c_utf8_list  = "/*List of unicode characters*/
+static const uint32_t $output_name". "_utf8_list[] = {";
+
+
+	for($i = 0; $i < count($unicode_array); $i++) {
+		$unicode_str = str_pad(dechex($unicode_array[$i]), 4, '0', STR_PAD_LEFT);
+		$c_utf8_list .= "\n  $unicode_array[$i],\t/*Unicode: U+$unicode_str ($utf8_array[$i])*/"; 
 	}
 
-	$c_unicode_list .= "\n  0,    /*End indicator*/\n};";
+	$c_utf8_list .= "\n  0,    /*End indicator*/\n};";
 }
  
 $c_info .= "\n***********************************************************************************/\n";
@@ -196,12 +211,12 @@ $c_font_dsc = "lv_font_t $output_name =
     .h_px = $h_px".",\t\t\t\t/*Font height in pixels*/
     .glyph_bitmap = $output_name"."_glyph_bitmap,\t/*Bitmap of glyphs*/
     .glyph_dsc = $output_name"."_glyph_dsc,\t\t/*Description of glyphs*/";
-if(strlen($unicode_list)) { $c_font_dsc .= "
-    .unicode_list = $output_name"."_unicode_list,\t/*List of unicode characters*/
+if(count($utf8_array)) { $c_font_dsc .= "
+    .utf8_list = $output_name"."_utf8_list,\t/*List of unicode characters*/
     .get_bitmap = lv_font_get_bitmap_sparse,\t/*Function pointer to get glyph's bitmap*/
     .get_width = lv_font_get_width_sparse,\t/*Function pointer to get glyph's width*/\n";
 } else { $c_font_dsc .= "
-    .unicode_list = NULL,\t/*Every character in the font from 'unicode_first' to 'unicode_last'*/
+    .utf8_list = NULL,\t/*Every character in the font from 'unicode_first' to 'unicode_last'*/
     .get_bitmap = lv_font_get_bitmap_continuous,\t/*Function pointer to get glyph's bitmap*/
     .get_width = lv_font_get_width_continuous,\t/*Function pointer to get glyph's width*/\n";
 }
@@ -269,7 +284,7 @@ if(!$builtin) {
 $c_glyph_bitmap .= "};";
 $c_glyph_dsc .= "};";
 $c_src .= $c_glyph_bitmap . "\n\n" . $c_glyph_dsc . "\n\n";
-if(strlen($c_unicode_list)) $c_src .= $c_unicode_list . "\n\n";
+if(strlen($c_utf8_list)) $c_src .= $c_utf8_list . "\n\n";
 $c_src .= $c_font_dsc;
 
 if($builtin) {
@@ -283,7 +298,8 @@ download($output_name, $c_src);
 
 function convert_all_letters()
 {
-    global $unicode_list;
+    global $utf8_array;
+    global $unicode_array;
     global $unicode_start;
     global $unicode_last;
     global $font_file;
@@ -296,8 +312,7 @@ function convert_all_letters()
     global $black;
     global $white;
 
-
-    if(strlen($unicode_list) == 0) {
+    if(count($utf8_array) == 0) {
         for($unicode_act = $unicode_start; $unicode_act <= $unicode_last; $unicode_act++) {
 	        imagefilledrectangle($im, 0, 0, $canvas_w, $h_px, $black);
             $letter = utf8($unicode_act);
@@ -306,24 +321,12 @@ function convert_all_letters()
             convert_letter($im, $unicode_act,  $w_px, $bpp);
         }
     } else {
-    $run_cnt = 0;
-        $list_len = mb_strlen($unicode_list);
-        for($i = 0; $i < $list_len; $i++) {
-            $letter = mb_substr($unicode_list, $i, 1);
-            $letter_len = strlen($letter);
-            
-            
-            //echo($letter . "<br>");
-        	$unicode_act = ord_utf8( $letter);
-            $run_cnt_pre ++;
-            if($unicode_act == 0 || $unicode_act < $unicode_start || $unicode_act > $unicode_last) continue;
-            $run_cnt_post ++;       
+        for($i = 0; $i < count($unicode_array); $i++) {
             imagefilledrectangle($im, 0, 0, $canvas_w, $h_px, $black);
-            $co = imagettftext($im, $h_pt, 0, 0, $h_pt + $base_line_ofs, $white, $font_file, $letter);    //Size and Y in pt NOT px
-            //echo($letter . ": " .$co[7] . "  " . $co[1]. "<br>");
+            $co = imagettftext($im, $h_pt, 0, 0, $h_pt + $base_line_ofs, $white, $font_file, $utf8_array[$i]);    //Size and Y in pt NOT px
             
             $w_px = $co[1] - $co[0];
-            convert_letter($im, $unicode_act,  $w_px, $bpp);
+            convert_letter($im, $unicode_array[$i],  $w_px, $bpp);
         }
     }
 }
