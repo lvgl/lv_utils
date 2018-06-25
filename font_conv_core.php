@@ -179,7 +179,7 @@ if(strlen($utf8_list) != 0) {
     
 
 	$c_utf8_list  = "/*List of unicode characters*/
-static const uint32_t $output_name". "_utf8_list[] = {";
+static const uint32_t $output_name". "_unicode_list[] = {";
 
 
 	for($i = 0; $i < count($unicode_array); $i++) {
