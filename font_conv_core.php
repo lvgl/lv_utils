@@ -447,7 +447,7 @@ function convert_letter($glyph, $unicode,  $w, $bpp) {
         
         for($x = 0; $x < $w; $x++) {
             $act_byte = $act_byte << (1 * $bpp);
-            $x_act = $x + $first_col - $x_mono_ofs;
+            $x_act = $x + $first_col;
             if($x_act >= 0) {
                 $c = imagecolorat($glyph, $x_act , $y);
             } else {
