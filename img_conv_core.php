@@ -629,6 +629,7 @@ else{
   /*The scripts runs OFFLINE (likely in command)*/
   if(isset($_POST["name"])){
     $output_name = $_POST["name"];
+    echo("output_name:"."$output_name\n");
   }
   else{
     echo("Mising Name\n");
@@ -638,6 +639,7 @@ else{
   if(isset($_POST["img"])){
     $img_file = $_POST["img"];
     $img_file_name = $_POST["img"];
+    echo("img_file:"."$img_file\n");
   }
   else{
     echo("Mising image file\n");
@@ -646,20 +648,15 @@ else{
 
   if(isset($_POST["format"])){
     $format = $_POST["format"];
+    echo("format:"."$format\n");
   }
   else{
     $format = "c_array";
   }
 
-  if(isset($_POST["transp"])){
-    $transp = $_POST["transp"];
-  }
-  else{
-    $transp = "none";
-  }
-
   if(isset($_POST["dith"])){
     $dith = $_POST["dith"];
+    echo("dith:"."$dith\n");
   }
   else {
     $dith = "enabled";
