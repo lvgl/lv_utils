@@ -733,7 +733,7 @@ if(!strcmp($format, "c_array")) {
          $conv->download_c($conv->out_name);
     }
     else if(!strcmp($cf, "raw_alpha")) {
-         $conv->convert($conv::CF_RAW, 1);
+         $conv->convert($conv::CF_RAW_ALPHA, 1);
          $conv->download_c($conv->out_name);
     }
     else if(!strcmp($cf, "raw_chroma")) {
