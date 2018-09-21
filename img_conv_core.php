@@ -111,11 +111,14 @@ class Converter {
             $img_tmp = imagecreatetruecolor($this->w, $this->h);
             imagecopy ($img_tmp, $this->img, 0 , 0 , 0 , 0, $this->w , $this->h);
             imagetruecolortopalette($this->img, false, $palette_size);
-
+            $real_palette_size = imagecolorstotal($this->img);                          /*The real number of colos in the image's palette*/
 	        for($i = 0; $i < $palette_size; $i++) {
-               // TODO !WARNING SUPPRESSED! Warning when: format=indexed_8
-	           @$c = imagecolorsforindex ($this->img , $i);
-               array_push($this->d_out, $c['blue'], $c['green'], $c['red'], 0xFF);
+	            if($i < $real_palette_size) {
+	                $c = imagecolorsforindex ($this->img , $i);
+                    array_push($this->d_out, $c['blue'], $c['green'], $c['red'], 0xFF);
+                } else {
+                    array_push($this->d_out, 0xFF, 0xFF, 0xFF, 0xFF);
+                }
 	        }
         }
 
@@ -128,8 +131,10 @@ class Converter {
             }
         }
 
-        // TODO !WARNING SUPPRESSED!
-        @imagecopy ($this->img, $img_tmp,  0 , 0 , 0 , 0 , $this->w , $this->h);
+        /*Revert the original image if it was converted to indexed*/
+        if($palette_size) {
+            imagecopy ($this->img, $img_tmp,  0 , 0 , 0 , 0 , $this->w , $this->h);
+        }
     }
 
     function format_to_c_array() {
@@ -342,8 +347,7 @@ lv_img_dsc_t " . $this->out_name . " = {
     function download_bin($name, $cf = -1, $content = 0){
       global $offline;
 
-      // TODO !WARNING SUPPRESSED!
-      if(@count($content) <= 1) {
+      if($content == 0) {
         $content = $this->d_out;
       }
 
@@ -441,8 +445,7 @@ lv_img_dsc_t " . $this->out_name . " = {
             $w = $this->w >> 3;
             if($this->w & 0x07) $w++;
             $p = $w * $y + ($x >> 3);
-            // TODO !WARNING SUPPRESSED! Warning when: format=alpha_1
-            @$this->d_out[$p] &= ~(1 << (7 - ($x & 0x7)));       /*Clear the bits first*/
+            if(!isset($this->d_out[$p])) $this->d_out[$p] = 0;          /*Clear the bits first*/
             if($a > 0x80) {
                 $this->d_out[$p] |= 1 << (7 - ($x & 0x7));
             }
@@ -452,8 +455,7 @@ lv_img_dsc_t " . $this->out_name . " = {
             if($this->w & 0x03) $w++;
 
             $p = $w * $y + ($x >> 2);
-            // TODO !WARNING SUPPRESSED! Warning when: format=alpha_2
-            @$this->d_out[$p] &= ~(0x3 << (6 - (($x & 0x3) * 2)));       /*Clear the bits first*/
+            if(!isset($this->d_out[$p])) $this->d_out[$p] = 0;          /*Clear the bits first*/
             $this->d_out[$p] |= ($a >> 6) << (6 - (($x & 0x3) * 2));
         }
         else if($this->cf == self::CF_ALPHA_4_BIT) {
@@ -461,8 +463,7 @@ lv_img_dsc_t " . $this->out_name . " = {
             if($this->w & 0x01) $w++;
 
             $p = $w * $y + ($x >> 1);
-            // TODO !WARNING SUPPRESSED! Warning when: format=alpha_4
-            @$this->d_out[$p] &= ~(0xF << (4 - (($x & 0x1) * 4)));       /*Clear the bits first*/
+            if(!isset($this->d_out[$p])) $this->d_out[$p] = 0;          /*Clear the bits first*/
             $this->d_out[$p] |= ($a >> 4) << (4 - (($x & 0x1) * 4));
         }
         else if($this->cf == self::CF_ALPHA_8_BIT) {
@@ -474,18 +475,15 @@ lv_img_dsc_t " . $this->out_name . " = {
             if($this->w & 0x07) $w++;
 
             $p = $w * $y + ($x >> 3) + 8;                       /* +8 for the palette*/
-            // TODO !WARNING SUPPRESSED! Warning when: format=indexed_1
-            @$this->d_out[$p] &= ~(1 << (7 - ($x & 0x7)));       /*Clear the bits first*/
+            if(!isset($this->d_out[$p])) $this->d_out[$p] = 0;          /*Clear the bits first*/
             $this->d_out[$p] |= ($c & 0x1) << (7 - ($x & 0x7));
-            //echo($c . " ");
         }
         else if($this->cf == self::CF_INDEXED_2_BIT) {
             $w = $this->w >> 2;
             if($this->w & 0x03) $w++;
 
             $p = $w * $y + ($x >> 2) + 16;                              /* +16 for the palette*/
-            // TODO !WARNING SUPPRESSED! Warning when: format=indexed_2
-            @$this->d_out[$p] &= ~(0x3 << (6 - (($x & 0x3) * 2)));       /*Clear the bits first*/
+            if(!isset($this->d_out[$p])) $this->d_out[$p] = 0;          /*Clear the bits first*/
             $this->d_out[$p] |= ($c & 0x3) << (6 - (($x & 0x3) * 2));
         }
         else if($this->cf == self::CF_INDEXED_4_BIT) {
@@ -493,8 +491,7 @@ lv_img_dsc_t " . $this->out_name . " = {
             if($this->w & 0x01) $w++;
 
             $p = $w * $y + ($x >> 1) + 64;                              /* +64 for the palette*/
-            // TODO !WARNING SUPPRESSED! Warning when: format=indexed_4
-            @$this->d_out[$p] &= ~(0xF << (4 - (($x & 0x1) * 4)));       /*Clear the bits first*/
+            if(!isset($this->d_out[$p])) $this->d_out[$p] = 0;          /*Clear the bits first*/
             $this->d_out[$p] |= ($c & 0xF) << (4 - (($x & 0x1) * 4));
         }
         else if($this->cf == self::CF_INDEXED_8_BIT) {
@@ -747,17 +744,17 @@ else  {
         $alpha = 0;
         if(!strcmp($cf, "true_color_alpha")) $alpha = 1;
 
-        if (!strcmp($format, "bin_332")) $conv->convert($conv::CF_TRUE_COLOR_332, $alpha);
-        else if (!strcmp($format, "bin_565")) $conv->convert($conv::CF_TRUE_COLOR_565, $alpha);
-        else if (!strcmp($format, "bin_565_swap")) $conv->convert($conv::CF_TRUE_COLOR_565_SWAP, $alpha);
-        else if (!strcmp($format, "bin_888")) $conv->convert($conv::CF_TRUE_COLOR_888, $alpha);
+        if (!strcmp($format, "bin_332"))            $conv->convert($conv::CF_TRUE_COLOR_332, $alpha);
+        else if (!strcmp($format, "bin_565"))       $conv->convert($conv::CF_TRUE_COLOR_565, $alpha);
+        else if (!strcmp($format, "bin_565_swap"))  $conv->convert($conv::CF_TRUE_COLOR_565_SWAP, $alpha);
+        else if (!strcmp($format, "bin_888"))       $conv->convert($conv::CF_TRUE_COLOR_888, $alpha);
         else {
          echo("Unknown output file format: $format");
          exit(1);
         }
-        if(!strcmp($cf, "true_color")) $conv->download_bin($conv->out_name, $conv::CF_TRUE_COLOR);
-        if(!strcmp($cf, "true_color_alpha")) $conv->download_bin($conv->out_name, $conv::CF_TRUE_COLOR_ALPHA);
-        if(!strcmp($cf, "true_color_chroma")) $conv->download_bin($conv->out_name, $conv::CF_TRUE_COLOR_CHROMA);
+        if(!strcmp($cf, "true_color"))          $conv->download_bin($conv->out_name, $conv::CF_TRUE_COLOR);
+        if(!strcmp($cf, "true_color_alpha"))    $conv->download_bin($conv->out_name, $conv::CF_TRUE_COLOR_ALPHA);
+        if(!strcmp($cf, "true_color_chroma"))   $conv->download_bin($conv->out_name, $conv::CF_TRUE_COLOR_CHROMA);
     }
     else if(!strcmp($cf, "alpha_1")) {
          $conv->convert($conv::CF_ALPHA_1_BIT, 1);
