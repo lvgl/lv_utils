@@ -53,12 +53,12 @@ The required arguments of the script:
 - **img** an image file
 
 Optional arguments:
-- **transp** transparency handlig. Possible values are: `none`, `alpha` (add alpha byte to every pixel) or `chroma` (mark the image as chroma keyed). Default is `none`.
-- **format** C array or Binary output. Possible values are: `c_array`, `bin_rgb332`, `bin_rgb565`, `bin_rgb888`. Default is: `c_array`.
+- **cf** color format. Possible values are: `true_color`, `true_color_alpha`, `true_color_chroma`, `indexed_1`, `indexed_2`, `indexed_4`, `indexed_8`, `alpha_1`, `alpha_2`, `alpha_4`, `alpha_8`, `raw`, `raw_alpha`, `raw_chroma`. The default is: `true_color`.
+- **format** C array or Binary output. Possible values are: `c_array`, `bin_332`, `bin_565`, `bin_565_swap`, `bin_888`. Default is: `c_array`.
 
 ### Example with all options 
 Convert a *bunny.png* with alpha for all pixels to C array:
-`php img_conv_core.php "name=icon&img=bunny.png&format=c_array&transp=alpha"`
+`php img_conv_core.php "name=icon&img=bunny.png&format=c_array&cf=alpha"`
 
 ### Using the generated image in LittlevGL
 * For C arrays

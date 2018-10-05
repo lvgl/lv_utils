@@ -212,13 +212,16 @@ $c_font_dsc = "lv_font_t $output_name =
     .glyph_bitmap = $output_name"."_glyph_bitmap,\t/*Bitmap of glyphs*/
     .glyph_dsc = $output_name"."_glyph_dsc,\t\t/*Description of glyphs*/";
 if(count($utf8_array)) { $c_font_dsc .= "
+    .glyph_cnt = ". count($utf8_array) . ",\t\t\t/*Number of glyphs in the font*/
     .unicode_list = $output_name"."_unicode_list,\t/*List of unicode characters*/
     .get_bitmap = lv_font_get_bitmap_sparse,\t/*Function pointer to get glyph's bitmap*/
-    .get_width = lv_font_get_width_sparse,\t/*Function pointer to get glyph's width*/\n";
-} else { $c_font_dsc .= "
+    .get_width = lv_font_get_width_sparse,\t/*Function pointer to get glyph's width*/";
+} else { 
+$c_font_dsc .= "
+    .glyph_cnt = ".  ($unicode_last - $unicode_start + 1) . ",\t\t\t/*Number of glyphs in the font*/
     .unicode_list = NULL,\t/*Every character in the font from 'unicode_first' to 'unicode_last'*/
     .get_bitmap = lv_font_get_bitmap_continuous,\t/*Function pointer to get glyph's bitmap*/
-    .get_width = lv_font_get_width_continuous,\t/*Function pointer to get glyph's width*/\n";
+    .get_width = lv_font_get_width_continuous,\t/*Function pointer to get glyph's width*/";
 }
 
 if($builtin) {
