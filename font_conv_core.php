@@ -135,7 +135,7 @@ $h_pt = $h_pt * 0.75;
 
 if($builtin) {
     $c_src = "
-#include \"../lv_font.h\"\n";
+#include \"../lv_misc/lv_font.h\"\n";	//fix relative path error
 
     $c_src .= "\n#if USE_". strtoupper($output_name) . " != 0\t/*Can be enabled in lv_conf.h*/\n\n";
 
@@ -225,7 +225,7 @@ $c_font_dsc .= "
 }
 
 if($builtin) {
-$c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
+$c_font_dsc .= "\n#if USE_" . strtoupper($output_name) . " == 1	//for a better style by default
     .bpp = 1,\t\t\t\t/*Bit per pixel*/
  #elif USE_" . strtoupper($output_name) . " == 2
     .bpp = 2,\t\t\t\t/*Bit per pixel*/
@@ -239,6 +239,10 @@ $c_font_dsc .= "#if USE_" . strtoupper($output_name) . " == 1
 }
 if($monospace) {
     $c_font_dsc .= "    .monospace = $monospace,\t\t/*Fix width (0: if not used)*/\n";
+    }
+else
+    {
+    	$c_font_dsc .= "    .monospace = 0,	\t\t	/*Fix width (0: if not used)*/\n";	//in case of misunderstanding
     }
     $c_font_dsc .= "    .next_page = NULL,\t\t/*Pointer to a font extension*/
 };";
@@ -349,7 +353,7 @@ function height_corr()
     $max_h = $h_px;
     $test_text = '| [§@#ß$ÄÁŰ¿?`\'"_pyj';
 
-    if($unicode_start >= 61440 && $unicode_last <= 62190) {
+    if($unicode_start >= 61440 && $unicode_last <= 63149) {	//some symbols are out range of 62xxx in fa-solid-900.ttf
         $test_text .= " ";
         //echo("symbol<br>");
     }
