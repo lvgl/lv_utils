@@ -240,7 +240,7 @@ $c_font_dsc .= "\n#if USE_" . strtoupper($output_name) . " == 1	//for a better s
 if($monospace) {
     $c_font_dsc .= "    .monospace = $monospace,\t\t/*Fix width (0: if not used)*/\n";
     }
-else
+	else
     {
     	$c_font_dsc .= "    .monospace = 0,	\t\t	/*Fix width (0: if not used)*/\n";	//in case of misunderstanding
     }
