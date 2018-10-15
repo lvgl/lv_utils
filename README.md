@@ -1,3 +1,6 @@
+
+
+# Offline version of Online convert tools
 These PHP scrips are the online converter tools:
 * Image converter: https://littlevgl.com/image-to-c-array
 * Font converter: https://littlevgl.com/ttf-font-to-c-array
@@ -68,3 +71,18 @@ Convert a *bunny.png* with alpha for all pixels to C array:
 * For externally binary files (e.g. SD card)
    - Set up a new driver. To learn more read the [Tutorial](https://github.com/littlevgl/lv_examples/blob/master/lv_tutorial/6_images/lv_tutorial_images.c).
    - Set the image for an lv_img object: lv_img_set_src(img1, "S:/path/to/image");
+   
+   
+#Other offline tools
+   
+## BDF Font Converter
+`utils/bdf_font_converter.py` converts [BDF](https://en.wikipedia.org/wiki/Glyph_Bitmap_Distribution_Format) files into a LittlevGL compatible c file. This converter is useful for generating pixel-perfect fonts, especially for monochrome displays.
+ Help can be printed out by:
+```
+python bdf_font_converter.py --help
+```
+ Typical use case (generates `crox3hb.c`):
+```
+python bdf_font_converter.py win_crox3hb.bdf crox3hb
+```
+   
