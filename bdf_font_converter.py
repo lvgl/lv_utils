@@ -259,7 +259,7 @@ static const lv_font_glyph_dsc_t %s_glyph_dsc[] =
     #####################
     out.write(
 '''
-lv_font_t %s =
+lv_font_t lv_font_%s =
 {
     .unicode_first = %d,	/*First Unicode letter in this font*/
     .unicode_last = %d,	/*Last Unicode letter in this font*/
