@@ -183,7 +183,7 @@ def parse_args():
     parser.add_argument('font_name', type=str, default='font_name',
             help='Name of the font to be generated')
     parser.add_argument('--toggle', '-t', action='store_true',
-            help='''Wrap entire file in "#if USE" macro''')
+            help='''Wrap entire file in "#if USE_LV_FONT_" macro''')
     parser.add_argument('--ascii', action='store_true',
             help='''Limit exported range to 0-127''')
     args = parser.parse_args()
@@ -215,7 +215,7 @@ def main():
 
     if args.toggle:
         out.write('''
-#if USE_%s != 0  /*Can be enabled in lv_conf.h*/
+#if USE_LV_FONT_%s != 0  /*Can be enabled in lv_conf.h*/
 ''' % args.font_name.upper())
 
     #################
