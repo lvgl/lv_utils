@@ -201,10 +201,6 @@ def main():
         for glyph in glyphs:
             if( glyph.encoding <= 127 ):
                 ascii_glyphs.append(glyph)
-            '''
-            if( int(glyph.name[2:], 16) <= 127 ):
-                ascii_glyphs.append(glyph)
-            '''
         glyphs = ascii_glyphs
 
     glyphs = apply_bbx(glyphs)
