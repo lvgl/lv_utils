@@ -24,7 +24,7 @@ class Glyph:
 
     def get_byte_width(self):
         # Compute how many bytes wide the glyph will be
-        return math.ceil(self.dwidth[0] / 8.0)
+        return math.ceil(self.get_width() / 8.0)
 
     def get_height(self):
         return len(self.bitmap)
@@ -49,6 +49,32 @@ class Glyph:
             f.write(pixel_art)
             f.write("\n")
         f.write("\n\n")
+
+    def shift_up(self, y):
+        self.bitmap += ['0'*len(self.bitmap[0]),]*y
+
+    def pad_top_to_height(self, height):
+        pad_n = height - self.get_height()
+        self.bitmap = ['0'*len(self.bitmap[0]),] * pad_n + self.bitmap
+
+    def apply_bbx_x(self):
+        w = self.bbx[0]
+        x = self.bbx[2]
+
+        # Naive and Inefficient, but works
+        new_bitmap = []
+        for row in self.bitmap:
+            # Convert to ascii string of 1's and 0's
+            binary = bin(int(row, 16))[2:].zfill(8)
+            # Shift to the right specified by bbx
+            binary = '0'*x + binary
+            # Convert it back into an ascii hex string
+            new_row = ''
+            for i in range(0,self.get_width(), 8):
+                new_row += "%02X" % int(binary[i:i+8][::-1].zfill(8)[::-1],2)
+            new_bitmap.append(new_row)
+
+        self.bitmap = new_bitmap
 
 def parse_bdf(fn):
     # Converts bdf file to a list of Glyphs
@@ -96,7 +122,7 @@ def parse_bdf(fn):
         tokens = bdf[i].split(' ')
         if tokens[0] != "BBX":
             continue
-        props['dwidth'] = (int(tokens[1]), int(tokens[2]),
+        props['bbx'] = (int(tokens[1]), int(tokens[2]),
                 int(tokens[3]), int(tokens[4]))
 
         i += 1
@@ -111,7 +137,42 @@ def parse_bdf(fn):
             if tokens[0] == 'ENDCHAR':
                 break
             props['bitmap'].append(tokens[0])
+        if len(props['bitmap']) == 0:
+            props['bitmap'] = ['00',]
         glyphs.append(Glyph(props))
+    return glyphs
+
+def apply_bbx(glyphs):
+    '''
+    Shifts the glyphs to the write position and makes them a uniform
+    height.
+    '''
+    # Add appropriate spacing to make uniform height
+    # first, prepend from the bottom
+    offsets_x = []
+    offsets_y = []
+    for glyph in glyphs:
+        offsets_x.append(glyph.bbx[2])
+        offsets_y.append(glyph.bbx[3])
+
+    offsets_y_min = min(offsets_y)
+    offsets_y_max = max(offsets_y)
+
+    for glyph in glyphs:
+        glyph.shift_up(glyph.bbx[3] - offsets_y_min)
+
+    # Now pad from the top
+    heights = []
+    for glyph in glyphs:
+        heights.append(glyph.get_height())
+    max_height = max(heights)
+    for glyph in glyphs:
+        glyph.pad_top_to_height(max_height)
+
+    # now shift according to bounding box
+    for glyph in glyphs:
+        glyph.apply_bbx_x()
+
     return glyphs
 
 def parse_args():
@@ -123,6 +184,8 @@ def parse_args():
             help='Name of the font to be generated')
     parser.add_argument('--toggle', '-t', action='store_true',
             help='''Wrap entire file in "#if USE" macro''')
+    parser.add_argument('--ascii', action='store_true',
+            help='''Limit exported range to 0-127''')
     args = parser.parse_args()
     dargs = vars(args)
     return (args, dargs)
@@ -132,6 +195,19 @@ def main():
 
     glyphs = parse_bdf(args.bdf_fn)
     glyphs.sort() # Sorts by encoding (utf8) value
+
+    if args.ascii:
+        ascii_glyphs = []
+        for glyph in glyphs:
+            if( glyph.encoding <= 127 ):
+                ascii_glyphs.append(glyph)
+            '''
+            if( int(glyph.name[2:], 16) <= 127 ):
+                ascii_glyphs.append(glyph)
+            '''
+        glyphs = ascii_glyphs
+
+    glyphs = apply_bbx(glyphs)
 
     ################
     # WRITE HEADER #
