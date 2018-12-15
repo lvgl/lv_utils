@@ -12,9 +12,17 @@ import math
 class Glyph:
     pixel_art_0 = '.'
     pixel_art_1 = '%'
-    def __init__(self, props ):
-        for k, v in props.items():
-            setattr(self, k, v)
+    def __init__(self, props:dict ):
+        if props is None:
+            self.name = 'MISSING'
+            self.encoding = 0
+            self.swidth = (0, 0)
+            self.dwidth = (0, 0)
+            self.bbx = (0, 0, 0, 0)
+            self.bitmap = None
+        else:
+            for k, v in props.items():
+                setattr(self, k, v)
 
     def __lt__(self, other):
         return self.encoding < other.encoding
@@ -33,12 +41,18 @@ class Glyph:
         return math.ceil(self.get_width() / 8.0)
 
     def get_height(self):
-        return len(self.bitmap)
+        if self.bitmap is None:
+            return 0
+        else:
+            return len(self.bitmap)
 
     def get_encoding(self):
         return self.encoding
 
     def write_bitmap(self, f):
+        if self.bitmap is None:
+            return
+
         f.write('''/*Unicode: U+%04x ( %s ) , Width: %d */\n''' %
                 (self.encoding, self.name, self.dwidth[0]) )
         for line in self.bitmap:
@@ -211,6 +225,19 @@ def main():
 
     glyphs = apply_bbx(glyphs)
 
+    ##########################################
+    # fill in dummies for unavailable glyphs #
+    ##########################################
+    new_glyphs = []
+    glyph_index = 0;
+    for i in range(glyphs[0].get_encoding(), glyphs[-1].get_encoding()):
+        if(glyphs[glyph_index].get_encoding() == i):
+            new_glyphs.append(glyphs[glyph_index])
+            glyph_index += 1
+        else:
+            new_glyphs.append(Glyph(None))
+    glyphs = new_glyphs
+
     ################
     # WRITE HEADER #
     ################
@@ -249,11 +276,11 @@ static const uint8_t %s_glyph_bitmap[] =
 static const lv_font_glyph_dsc_t %s_glyph_dsc[] =
 {
 ''' % args.font_name)
+
     glyph_index = 0
     for glyph in glyphs:
-        out.write('''
-{.w_px = %d, .glyph_index = %d}, /*Unicode: U+%04x ( )*/
-''' % (glyph.get_width(), glyph_index, glyph.get_encoding()) )
+        out.write("{.w_px = %d, .glyph_index = %d}, /*Unicode: U+%04x ( )*/\n" \
+                % (glyph.get_width(), glyph_index, glyph.get_encoding()) )
         glyph_index += glyph.get_byte_width() * glyph.get_height()
 
     out.write('''
@@ -281,13 +308,13 @@ lv_font_t lv_font_%s =
     .next_page = NULL,		/*Pointer to a font extension*/
 };
 
-''' % (args.font_name,
-    glyphs[0].get_encoding(),
-    glyphs[-1].get_encoding(),
-    glyphs[0].get_height(),
-    args.font_name,
-    args.font_name,
-    len(glyphs),
+''' % (args.font_name,         # struct name
+    glyphs[0].get_encoding(),  # first utf8 encoded value
+    glyphs[-1].get_encoding(), # last utf8 encoded value
+    glyphs[0].get_height(),    # height of each glyph
+    args.font_name,            # glyph_bitmap
+    args.font_name,            # glyph_dsc
+    len(glyphs),               # glyph_cnt
     ) )
 
     if args.toggle:
