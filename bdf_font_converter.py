@@ -1,7 +1,7 @@
 #!/user/bin/env python
 
 '''
-Small utility that converts 1bpp BDF fonts to a font compatible with littlevgl
+Small utility that converts 1bpp BDF fonts to a font compatible with littlevgl.
 '''
 
 # General imports
@@ -236,6 +236,7 @@ def main():
             glyph_index += 1
         else:
             new_glyphs.append(Glyph(None))
+            new_glyphs[-1].encoding = i
     glyphs = new_glyphs
 
     ################
@@ -279,8 +280,8 @@ static const lv_font_glyph_dsc_t %s_glyph_dsc[] =
 
     glyph_index = 0
     for glyph in glyphs:
-        out.write("{.w_px = %d, .glyph_index = %d}, /*Unicode: U+%04x ( )*/\n" \
-                % (glyph.get_width(), glyph_index, glyph.get_encoding()) )
+        out.write("{.w_px = %d, .glyph_index = %d}, /*Unicode: U+%04x ( %s )*/\n" \
+                % (glyph.get_width(), glyph_index, glyph.get_encoding(), glyph) )
         glyph_index += glyph.get_byte_width() * glyph.get_height()
 
     out.write('''
