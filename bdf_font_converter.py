@@ -12,7 +12,7 @@ import math
 class Glyph:
     pixel_art_0 = '.'
     pixel_art_1 = '%'
-    def __init__(self, props:dict ):
+    def __init__(self, props):
         if props is None:
             self.name = 'MISSING'
             self.encoding = 0
