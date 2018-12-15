@@ -19,6 +19,12 @@ class Glyph:
     def __lt__(self, other):
         return self.encoding < other.encoding
 
+    def __repr__(self,):
+        return "<Glyph: %s 0x%08X>" % (self, self.encoding)
+
+    def __str__(self,):
+        return self.name
+
     def get_width(self):
         return self.dwidth[0]
 
