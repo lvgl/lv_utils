@@ -657,7 +657,7 @@ else{
     $dith = $_POST["dith"];
   }
   else {
-    $dith = "enabled";
+    $dith = 0;
   }
 
   if(isset($_POST["cf"])){

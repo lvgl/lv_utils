@@ -61,7 +61,7 @@ Optional arguments:
 
 ### Example with all options 
 Convert a *bunny.png* with alpha for all pixels to C array:
-`php img_conv_core.php "name=icon&img=bunny.png&format=c_array&cf=alpha"`
+`php img_conv_core.php "name=icon&img=bunny.png&format=c_array&cf=true_color_alpha"`
 
 ### Using the generated image in LittlevGL
 * For C arrays
