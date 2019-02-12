@@ -282,7 +282,7 @@ class Converter {
         $c_header =
         "#include \"lv_conf.h\"
 #include \"lvgl/lv_draw/lv_draw_img.h\"\n
-const uint8_t " . $this->out_name . "_map[] = {";
+LV_ATTRIBUTE_MEM_ALIGN const uint8_t " . $this->out_name . "_map[] = {";
 
         return $c_header;
     }
