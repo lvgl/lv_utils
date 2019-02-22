@@ -164,15 +164,12 @@ if($builtin) {
     $c_src = "
 #include \"../lv_misc/lv_font.h\"\n";	//fix relative path error
 
-
     $c_src .= "\n#if USE_". strtoupper($output_name) . " != 0\t/*Can be enabled in lv_conf.h*/\n\n";
-$c_info = "/***********************************************************************************
+    $c_info = "/***********************************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with all bpp";
-    
 } else {
-$c_src = "
-#include \"lvgl/lv_misc/lv_font.h\"\n\n";
-$c_info = "/***********************************************************************************
+    $c_src = "\n#include \"lvgl/lv_misc/lv_font.h\"\n\n";
+    $c_info = "/***********************************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with $bpp bpp";
 }
 $utf8_array = array();
