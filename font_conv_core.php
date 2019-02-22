@@ -163,6 +163,8 @@ $h_pt = $h_pt * 0.75;
 if($builtin) {
     $c_src = "
 #include \"../lv_misc/lv_font.h\"\n";	//fix relative path error
+
+
     $c_src .= "\n#if USE_". strtoupper($output_name) . " != 0\t/*Can be enabled in lv_conf.h*/\n\n";
 $c_info = "/***********************************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with all bpp";
@@ -252,6 +254,7 @@ $c_font_dsc .= "
     .get_width = lv_font_get_width_sparse,\t/*Function pointer to get glyph's width*/";
 }
 if($builtin) {
+
 $c_font_dsc .= "\n#if USE_" . strtoupper($output_name) . " == 1
     .bpp = 1,\t\t\t\t/*Bit per pixel*/
  #elif USE_" . strtoupper($output_name) . " == 2
@@ -264,14 +267,10 @@ $c_font_dsc .= "\n#if USE_" . strtoupper($output_name) . " == 1
 } else {
     $c_font_dsc .= "\n    .bpp = $bpp,\t\t\t\t/*Bit per pixel*/\n";
 }
-if($monospace) {
-    $c_font_dsc .= "    .monospace = $monospace,\t\t/*Fix width (0: if not used)*/\n";
-    }
-	else
-    {
-    	$c_font_dsc .= "    .monospace = 0,	\t\t	/*Fix width (0: if not used)*/\n";	//in case of misunderstanding
-    }
-    $c_font_dsc .= "    .next_page = NULL,\t\t/*Pointer to a font extension*/
+if($monospace) $c_font_dsc .= "    .monospace = $monospace,\t\t/*Fix width (0: if not used)*/\n";
+else $c_font_dsc .= "    .monospace = 0,	\t\t	/*Fix width (0: if not used)*/\n";	//in case of misunderstanding
+
+$c_font_dsc .= "    .next_page = NULL,\t\t/*Pointer to a font extension*/
 };";
 
 // Create the image
@@ -367,9 +366,9 @@ function height_corr()
     $black = imagecolorallocate($im, 0, 0, 0);
     $max_h = $h_px;
     $test_text = '| [§@#ß$ÄÁŰ¿?`\'"_pyj';
-    if($unicode_start >= 61440 && $unicode_last <= 63149) {	//some symbols are out range of 62xxx in fa-solid-900.ttf
+
+    if($unicode_start >= 61440 && $unicode_last <= 63149) {
         $test_text .= " ";
-        //echo("symbol<br>");
     }
     while($h_pt > 0) {
         $co = imagettftext($im, $h_pt, 0, 0, $h_pt, $white, $font_file, $test_text );
