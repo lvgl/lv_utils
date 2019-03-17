@@ -162,13 +162,13 @@ $h_pt = floor($h_pt/0.75);   /*Be sure h_pt is dividabe with 0.75*/
 $h_pt = $h_pt * 0.75;
 if($builtin) {
     $c_src = "
-#include \"../lv_misc/lv_font.h\"\n";	//fix relative path error
+#include \"lvgl/lvgl.h\"\n";	//fix relative path error
 
     $c_src .= "\n#if USE_". strtoupper($output_name) . " != 0\t/*Can be enabled in lv_conf.h*/\n\n";
     $c_info = "/***********************************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with all bpp";
 } else {
-    $c_src = "\n#include \"lvgl/lv_misc/lv_font.h\"\n\n";
+    $c_src = "\n#include \"lvgl/lvgl.h\"\n\n";
     $c_info = "/***********************************************************************************
  * $font_name $h_px px Font in $unicode_start_str ($unicode_start_letter) .. $unicode_last_str ($unicode_last_letter)  range with $bpp bpp";
 }

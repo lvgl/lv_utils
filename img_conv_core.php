@@ -280,8 +280,7 @@ class Converter {
 
     function get_c_header() {
         $c_header =
-        "#include \"lv_conf.h\"
-#include \"lvgl/lv_draw/lv_draw_img.h\"
+        "#include \"lvgl/lvgl.h\"
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN
@@ -807,3 +806,4 @@ $c_array .= "#include <stdint.h>
 //download("test", $c_565);
 
 ?>
+
