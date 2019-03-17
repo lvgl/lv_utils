@@ -16,16 +16,26 @@ This guide shows how to use the converters offline in a command line on **Linux*
 3. Clone or download the lv_utils repository: `git clone https://github.com/littlevgl/lv_utils.git`
 4. Go to the *lv_utils* directory.
 
+For **Mac OSX** using **Homebrew**
+
+Because the php version installed by xcode might not have the GD graphics library installed, you need to install the Homebrew version.  Once installed, you will need to find where it was installed and reference the complete path to php when running the commands shown on this page.  The example below in step 4 happened to be the installation location on my Mac for php version 7.3.3.
+
+1. Install xcode: install via the app store
+2. Install xcode CLI tools: xcode-select --install
+3. Install PHP: brew install php
+4. Check the install: /usr/local/Cellar/php/7.3.3/bin/php --version
+5. Continue with step 3 in the installation instructions for Linux
+
 ## Run the Font converter offline
 
-5. Copy a TTF file you want to use into the *lv_utils* directory
-6. Run the script: `php font_conv_core.php "name=arial_20&font=arial.ttf&height=20&bpp=4&uni_first=32&uni_last=126"`
-7. Chek the craeted C file in *lv_utils* directory.
+1. Copy a TTF or OTF file you want to use into the *lv_utils* directory.  (Note that OTF support has only been tested on Mac OSX with Homebrew-installed php version 7.3.3.)
+2. Run the script: `php font_conv_core.php "name=arial_20&font=arial.ttf&height=20&bpp=4&uni_first=32&uni_last=126"`
+3. Check the created C file in *lv_utils* directory.
 
 The required arguments of the script:
 
 - **name** name of the output file and font
-- **font** name of font file to use (must be a *.ttf file)
+- **font** name of font file to use (must be a *.ttf or *.otf file)
 - **height** desired height in px
 - **bpp** Bit-per-pixel (1, 2, 4 or 8)
 - **uni_first** the first unicode character to convert
@@ -53,9 +63,9 @@ Convert only the numbers and + - sign with Arial font (The plus sign is replaced
 
 ## Run the Image converter offline
 
-5. Copy a BMP, JPG or PNG file you want to use into the *lv_utils* directory
-6. Run the script: `php img_conv_core.php "name=wallpaper&img=red_flower.png"`
-7. Chek the created C file in *lv_utils* directory.
+1. Copy a BMP, JPG or PNG file you want to use into the *lv_utils* directory
+2. Run the script: `php img_conv_core.php "name=wallpaper&img=red_flower.png"`
+3. Chek the created C file in *lv_utils* directory.
 
 The required arguments of the script:
 
