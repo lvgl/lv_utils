@@ -12,7 +12,9 @@ Here you you can see how they work or download them to run offline.
 This guide shows how to use the converters offline in a command line on **Linux**
 
 1. Install PHP: `sudo apt-get install php7.2-cli`
-2. Intall the Image manipulator extension for PHP: `sudo apt-get install php7.2-gd`
+2. Intall extensions
+2.a For the Image manipulator: `sudo apt-get install php7.2-gd`
+2.b For the Font Convertor: `sudo apt install php7.2-mbstring`
 3. Clone or download the lv_utils repository: `git clone https://github.com/littlevgl/lv_utils.git`
 4. Go to the *lv_utils* directory.
 
