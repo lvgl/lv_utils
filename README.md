@@ -46,7 +46,7 @@ The required arguments of the script:
 Optional arguments:
 
 - **built_in** convert a built in font with all bpp (0 or 1)
-- **list** list of characters to include (must be in rango of *uni_first* and *uni_last* and in ascendant order). E.g. "list=123abc"
+- **list** list of characters to include (must be in rango of *uni_first* and *uni_last* and in ascendant order). E.g. "list=123abc" or "list=%26%2361457%3B" (for `&#61457;` - `U+f011`).
 - **scale** scale up/down the letters [%] E.g. "scale=120"
 - **base_shift** shift the base line [px] E.g. "base_shift=3"
 - **monospace** use this fixed width [px] E.g. "monospace=12"
