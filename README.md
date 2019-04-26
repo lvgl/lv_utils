@@ -13,8 +13,11 @@ This guide shows how to use the converters offline in a command line on **Linux*
 
 1. Install PHP: `sudo apt-get install php7.2-cli`
 2. Intall extensions
+
 2.a For the Image manipulator: `sudo apt-get install php7.2-gd`
+
 2.b For the Font Convertor: `sudo apt install php7.2-mbstring`
+
 3. Clone or download the lv_utils repository: `git clone https://github.com/littlevgl/lv_utils.git`
 4. Go to the *lv_utils* directory.
 
@@ -62,6 +65,36 @@ Convert only the numbers and + - sign with Arial font (The plus sign is replaced
  * In a C file of your application declare the font as: `extern lv_font_t my_font_name;` or simply `LV_FONT_DECLARE(my_font_name);`
   * Set the font in a style: `style.text.font = &my_font_name;`
 
+### List parameter specific utility
+
+Edit configs section in the `font_conv_for_lists.php`,
+
+```php
+$unicodes = array(
+  "THERMOMETER_EMPTY" => "f2cb",
+  "TINT             " => "f043",
+  "BALANCE_SCALE    " => "f24e",
+  "BARS             " => "f0c9",
+  "MICROCHIP        " => "f2db"
+);
+
+$height = 100;
+$name = "font_symbol_extra_" . $height;
+$font = "FontAwesome.ttf";
+$uni_first = 61440;
+$uni_last = 62190;
+$bpp = 8;
+
+$output_dir = "./output/";
+```
+
+Convert font to C file
+
+```sh
+php font_conv_for_lists.php
+```
+
+Copy the result C file (`<OUTPUT_DIR>/<FILENAME>.c`) into your LittlevGL project.
 
 ## Run the Image converter offline
 
