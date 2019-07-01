@@ -1,5 +1,11 @@
 # Offline version of Online convert tools
 
+## The font coverter is deprecated
+Since v6.0 the a Node.JS based converter is used. 
+See https://github.com/littlevgl/lv_font_conv
+
+## Overview
+
 These PHP scrips are the online converter tools:
 
 * Image converter: https://littlevgl.com/image-to-c-array
@@ -32,6 +38,7 @@ Because the php version installed by xcode might not have the GD graphics librar
 5. Continue with step 3 in the installation instructions for Linux
 
 ## Run the Font converter offline
+Deprecated,not compatible with LittlevGL since v6.0.
 
 1. Copy a TTF or OTF file you want to use into the *lv_utils* directory.  (Note that OTF support has only been tested on Mac OSX with Homebrew-installed php version 7.3.3.)
 2. Run the script: `php font_conv_core.php "name=arial_20&font=arial.ttf&height=20&bpp=4&uni_first=32&uni_last=126"`
