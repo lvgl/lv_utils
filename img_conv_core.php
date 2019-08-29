@@ -63,10 +63,10 @@ class Converter {
         $this->h = $size[1];
 
         $ext = pathinfo($real_name, PATHINFO_EXTENSION);
-        if(!strcmp($ext, "png")) $this->img = imagecreatefrompng($path);
-        else if(!strcmp($ext, "bmp")) $this->img = imagecreatefrombmp($path);
-        else if(!strcmp($ext, "jpg")) $this->img = imagecreatefromjpeg($path);
-        else if(!strcmp($ext == "jpeg")) $this->img = imagecreatefromjpeg($path);
+        if(!strcmp(strtolower($ext), "png")) $this->img = imagecreatefrompng($path);
+        else if(!strcmp(strtolower($ext), "bmp")) $this->img = imagecreatefrombmp($path);
+        else if(!strcmp(strtolower($ext), "jpg")) $this->img = imagecreatefromjpeg($path);
+        else if(!strcmp(strtolower($ext), "jpeg")) $this->img = imagecreatefromjpeg($path);
         else {
             echo("$ext is a not supported image type. use png, jpg, jpeg or bmp");
             exit(1);
@@ -388,7 +388,7 @@ lv_img_dsc_t " . $this->out_name . " = {
       $header = $lv_cf + ($this->w << 10) + ($this->h << 21);
       $header_bin = pack("V", $header);
 
-      $content = pack("C*", ...$content);
+      $content = pack("C*", $content);
 
       if($offline){
         $file = fopen($name, "w");
