@@ -286,7 +286,14 @@ class Converter {
 #define LV_ATTRIBUTE_MEM_ALIGN
 #endif
 
-const LV_ATTRIBUTE_MEM_ALIGN uint8_t " . $this->out_name . "_map[] = {";
+";
+        $attr_name = "LV_ATTRIBUTE_IMG_" . strtoupper($this->out_name); 
+        $c_header .= 
+"#ifndef $attr_name
+#define $attr_name
+#endif
+
+const LV_ATTRIBUTE_MEM_ALIGN $attr_name uint8_t " . $this->out_name . "_map[] = {";
 
         return $c_header;
     }
