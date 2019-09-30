@@ -395,7 +395,7 @@ lv_img_dsc_t " . $this->out_name . " = {
       $header = $lv_cf + ($this->w << 10) + ($this->h << 21);
       $header_bin = pack("V", $header);
 
-      $content = pack("C*", $content);
+      $content = pack("C*", ...$content);
 
       if($offline){
         $file = fopen($name, "w");
