@@ -301,7 +301,7 @@ const LV_ATTRIBUTE_MEM_ALIGN $attr_name uint8_t " . $this->out_name . "_map[] = 
     function get_c_footer($cf) {
         $c_footer =
         "\n};\n
-lv_img_dsc_t " . $this->out_name . " = {
+const lv_img_dsc_t " . $this->out_name . " = {
   .header.always_zero = 0,
   .header.w = " . $this->w . ",
   .header.h = " . $this->h . ",\n";
@@ -813,4 +813,3 @@ $c_array .= "#include <stdint.h>
 //download("test", $c_565);
 
 ?>
-
