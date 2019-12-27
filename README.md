@@ -119,7 +119,7 @@ Optional arguments:
 - **cf** color format. Possible values are: `true_color`, `true_color_alpha`, `true_color_chroma`, `indexed_1`, `indexed_2`, `indexed_4`, `indexed_8`, `alpha_1`, `alpha_2`, `alpha_4`, `alpha_8`, `raw`, `raw_alpha`, `raw_chroma`. The default is: `true_color`.
 - **format** C array or Binary output. Possible values are: `c_array`, `bin_332`, `bin_565`, `bin_565_swap`, `bin_888`. Default is: `c_array`.
 
-**Note:** You may need to increase `memory_limit` if PHP reports an error similar to this:
+**Note:** You may need to increase `memory_limit` in `php.ini` if PHP reports an error similar to this:
 ```text
 PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to allocate 21570880 bytes) in lv_utils/img_conv_core.php`
 ```
