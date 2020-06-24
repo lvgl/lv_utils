@@ -2,7 +2,7 @@
 
 ## 5.3- font converter
 
-The old 5.x font converter (using PHP) was removed in January 2020 as it is no longer compatible with modern versions of LittlevGL. The last commit containing it is `ec7d2676b36a27fa13b21162aca1476ad8456ec5`.
+The old 5.x font converter (using PHP) was removed in January 2020 as it is no longer compatible with modern versions of LittlevGL. The last commit containing it is [`ec7d2676b36a27fa13b21162aca1476ad8456ec5`](https://github.com/lvgl/lv_utils/tree/ec7d2676b36a27fa13b21162aca1476ad8456ec5).
 
 ## Overview
 
