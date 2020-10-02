@@ -146,7 +146,7 @@ class Converter {
 
         if($this->cf == self::CF_TRUE_COLOR_332) {
             $c_array .= "\n#if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8";
-            if(!$this->alpha) $c_array .= "\n  /*Pixel format: Red: 3 bit, Green: 3 bit, Blue: 2 bit*/";
+            if(!$this->alpha) $c_array .= "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit*/";
             else  $c_array .= "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit, Alpha 8 bit */";
         } else if($this->cf == self::CF_TRUE_COLOR_565) {
             $c_array .= "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP == 0";
