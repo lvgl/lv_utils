@@ -147,19 +147,19 @@ class Converter {
         if($this->cf == self::CF_TRUE_COLOR_332) {
             $c_array .= "\n#if LV_COLOR_DEPTH == 1 || LV_COLOR_DEPTH == 8";
             if(!$this->alpha) $c_array .= "\n  /*Pixel format: Red: 3 bit, Green: 3 bit, Blue: 2 bit*/";
-            else  $c_array .= "\n  /*Pixel format: Alpha 8 bit, Red: 3 bit, Green: 3 bit, Blue: 2 bit*/";
+            else  $c_array .= "\n  /*Pixel format: Blue: 2 bit, Green: 3 bit, Red: 3 bit, Alpha 8 bit */";
         } else if($this->cf == self::CF_TRUE_COLOR_565) {
             $c_array .= "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP == 0";
-            if(!$this->alpha) $c_array .= "\n  /*Pixel format: Red: 5 bit, Green: 6 bit, Blue: 5 bit*/";
-            else $c_array .= "\n  /*Pixel format: Alpha 8 bit, Red: 5 bit, Green: 6 bit, Blue: 5 bit*/";
+            if(!$this->alpha) $c_array .= "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit*/";
+            else $c_array .= "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit, Alpha 8 bit*/";
         }  else if($this->cf == self::CF_TRUE_COLOR_565_SWAP) {
             $c_array .= "\n#if LV_COLOR_DEPTH == 16 && LV_COLOR_16_SWAP != 0";
-            if(!$this->alpha) $c_array .=  "\n  /*Pixel format: Red: 5 bit, Green: 6 bit, Blue: 5 bit BUT the 2 bytes are swapped*/";
-            else $c_array .= "\n  /*Pixel format: Alpha 8 bit, Red: 5 bit, Green: 6 bit, Blue: 5 bit  BUT the 2  color bytes are swapped*/";
+            if(!$this->alpha) $c_array .=  "\n  /*Pixel format: Blue: 5 bit, Green: 6 bit, Red: 5 bit BUT the 2 bytes are swapped*/";
+            else $c_array .= "\n  /*Pixel format:  Blue: 5 bit Green: 6 bit, Red: 5 bit, Alpha 8 bit  BUT the 2  color bytes are swapped*/";
         }  else if($this->cf == self::CF_TRUE_COLOR_888) {
             $c_array .= "\n#if LV_COLOR_DEPTH == 32";
-            if(!$this->alpha) $c_array .= "\n  /*Pixel format: Fix 0xFF: 8 bit, Red: 8 bit, Green: 8 bit, Blue: 8 bit*/";
-            else "\n  /*Pixel format: Alpha 8 bit, Red: 8 bit, Green: 8 bit, Blue: 8 bit*/";
+            if(!$this->alpha) $c_array .= "\n  /*Pixel format: Fix 0xFF: 8 bit, Blue: 8 bit, Green: 8 bit, Red: 8 bit*/";
+            else "\n  /*Pixel format: Blue: 8 bit, Green: 8 bit, Red: 8 bit, Alpha 8 bit*/";
         } else if($this->cf == self::CF_INDEXED_1_BIT) {
             $c_array .= "\n";
             for($p = 0; $p < 2; $p ++) {
