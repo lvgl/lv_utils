@@ -53,10 +53,13 @@ class Converter {
      * @param dith 1: dither enabled; 0: disabled
      * @param cf color format
      */
-    function __construct ($path, $real_name, $out_name ,$dith) {
+    function __construct ($path, $real_name, $out_name ,$dith, $cf) {
+     		
         $this->dith = $dith;
         $this->out_name = $out_name;
         $this->path = $path;
+
+     		if($cf == "raw" || $cf == "raw_alpha" || $cf == "raw_chroma") return;
 
         $size = getimagesize($path);
         $this->w = $size[0];
@@ -679,7 +682,7 @@ else{
   }
 }
 
-$conv = new Converter($img_file, $img_file_name, $output_name, $dith);
+$conv = new Converter($img_file, $img_file_name, $output_name, $dith, $cf);
 
 if(!strcmp($format, "c_array")) {
     if(!strcmp($cf, "true_color") || !strcmp($cf, "true_color_alpha") || !strcmp($cf, "true_color_chroma")) {
