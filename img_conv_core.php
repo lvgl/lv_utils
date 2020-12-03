@@ -282,8 +282,12 @@ class Converter {
     }
 
     function get_c_header() {
-        $c_header =
-        "#include \"lvgl/lvgl.h\"
+        $c_header ="#if defined(LV_LVGL_H_INCLUDE_SIMPLE)
+#include \"lvgl.h\"
+#else
+#include \"../lvgl/lvgl.h\"
+#endif
+
 
 #ifndef LV_ATTRIBUTE_MEM_ALIGN
 #define LV_ATTRIBUTE_MEM_ALIGN
@@ -296,7 +300,7 @@ class Converter {
 #define $attr_name
 #endif
 
-const LV_ATTRIBUTE_MEM_ALIGN $attr_name uint8_t " . $this->out_name . "_map[] = {";
+const LV_ATTRIBUTE_MEM_ALIGN LV_ATTRIBUTE_LARGE_CONST $attr_name uint8_t " . $this->out_name . "_map[] = {";
 
         return $c_header;
     }
