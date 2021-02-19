@@ -23,7 +23,7 @@ class Converter {
     var $b_earr;
 
     var $r_nerr;  /*Classification error for next pixel*/
-    var $g_err;
+    var $g_nerr;
     var $b_nerr;
 
     const CF_TRUE_COLOR_332 = 0;      /*Helper formats. Used internally*/
@@ -42,7 +42,7 @@ class Converter {
     const CF_RAW_ALPHA = 13;
     const CF_RAW_CHROMA = 12;
 
-    const CF_TRUE_COLOR = 100;          /*Helper formats is C arrays contains all treu color formats (usin in "download")*/
+    const CF_TRUE_COLOR = 100;          /*Helper formats is C arrays contains all true color formats (using in "download")*/
     const CF_TRUE_COLOR_ALPHA = 101;
     const CF_TRUE_COLOR_CHROMA = 102;
 
@@ -114,7 +114,7 @@ class Converter {
             $img_tmp = imagecreatetruecolor($this->w, $this->h);
             imagecopy ($img_tmp, $this->img, 0 , 0 , 0 , 0, $this->w , $this->h);
             imagetruecolortopalette($this->img, false, $palette_size);
-            $real_palette_size = imagecolorstotal($this->img);                          /*The real number of colos in the image's palette*/
+            $real_palette_size = imagecolorstotal($this->img);                          /*The real number of colors in the image's palette*/
 	        for($i = 0; $i < $palette_size; $i++) {
 	            if($i < $real_palette_size) {
 	                $c = imagecolorsforindex ($this->img , $i);
