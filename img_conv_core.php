@@ -59,11 +59,11 @@ class Converter {
         $this->out_name = $out_name;
         $this->path = $path;
 
-     		if($cf == "raw" || $cf == "raw_alpha" || $cf == "raw_chroma") return;
-
         $size = getimagesize($path);
         $this->w = $size[0];
         $this->h = $size[1];
+
+        if($cf == "raw" || $cf == "raw_alpha" || $cf == "raw_chroma") return;
 
         $ext = pathinfo($real_name, PATHINFO_EXTENSION);
         if(!strcmp(strtolower($ext), "png")) $this->img = imagecreatefrompng($path);
