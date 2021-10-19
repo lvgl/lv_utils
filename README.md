@@ -1,4 +1,8 @@
-# Utilities for use with LittlevGL
+**Arcihed because both the font converter and the image converter are replaced with more advanced Node.js based converters****
+- https://github.com/lvgl/lv_font_conv
+- https://github.com/lvgl/lv_img_conv
+
+# Utilities for use with LVGL
 
 ## 5.3- font converter
 
@@ -61,7 +65,7 @@ PHP Fatal error:  Allowed memory size of 134217728 bytes exhausted (tried to all
 Convert a *bunny.png* with alpha for all pixels to C array:
 `php img_conv_core.php "name=icon&img=bunny.png&format=c_array&cf=true_color_alpha"`
 
-### Using the generated image in LittlevGL
+### Using the generated image in LVGL
 
 * For C arrays
    - Copy the result C file into your LittlevGL project
